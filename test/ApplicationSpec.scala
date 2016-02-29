@@ -1,3 +1,4 @@
+import controllers.Application
 import org.specs2.mutable._
 import org.specs2.runner._
 import org.junit.runner._
@@ -16,7 +17,7 @@ class ApplicationSpec extends Specification {
   "Application" should {
 
     "send 404 on a bad request" in new WithApplication{
-      route(FakeRequest(GET, "/boum")) must beSome.which (status(_) == NOT_FOUND)
+      route(FakeRequest(GET, "/boum")) must beNone
     }
 
     "render the index page" in new WithApplication{
