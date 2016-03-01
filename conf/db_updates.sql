@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS device_info (
 
 CREATE TABLE IF NOT EXISTS usage_stat (
 
-	usage_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	usage_id INT NOT NULL AUTO_INCREMENT,
 	device_id VARCHAR(36) NOT NULL,
 	application_version VARCHAR(10) NOT NULL,
 	usage_counter INT NOT NULL,
@@ -82,7 +82,9 @@ CREATE TABLE IF NOT EXISTS usage_stat (
 	FOREIGN KEY (device_id) REFERENCES device_info (device_id),
 	FOREIGN KEY (rec_status) REFERENCES rec_status_ref (rec_status_id),
 	FOREIGN KEY (rec_created_by) REFERENCES users(user_id),
-	FOREIGN KEY (rec_modified_by) REFERENCES users(user_id)
+	FOREIGN KEY (rec_modified_by) REFERENCES users(user_id),
+	PRIMARY KEY (usage_id, application_version),
+	UNIQUE (device_id)
 );
 
 CREATE OR REPLACE VIEW usage_stat_vu AS SELECT * FROM usage_stat;

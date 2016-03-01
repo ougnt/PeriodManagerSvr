@@ -140,5 +140,56 @@ trait InjectAble {
     }
     if(hasData) returnedSeq else Nil
   }
+
+  def insertOrUpdate(keyName : String, keyValue : String) = {
+
+    try{
+      insert()
+    } catch {
+
+      case e : SQLException => {
+        var sqlStatement =
+          """UPDATE %s
+            |SET #columns# = '#values#',""".stripMargin.format(tableName)
+
+        fields = fields.filterNot(field => field.getName == "connection").
+          filterNot(field => field.getName == "databaseUrl").
+          filterNot(field => field.getName == "serialVersionUID").
+          filterNot(field => field.getName == "callContext").
+          filterNot(field => field.getName == "fields").
+          filterNot(field => field.getName == "tableName").
+          filterNot(field => field.getName == "recCreatedWhen").
+          filterNot(field => field.getName == "recCreatedBy").
+          filterNot(field => field.getName == "recModifiedWhen").
+          filterNot(field => field.getName == "recModifiedBy")
+
+        fields.foreach(field => {
+
+          field.setAccessible(true)
+          val value = field.get(this)
+          if (value != null) {
+
+            sqlStatement = sqlStatement.replace( """#columns#""", field.getName.replaceAll( """([A-Z])""", """_$1"""))
+            sqlStatement = sqlStatement.replace( """#values#""", value.toString).concat("""#columns# = '#values#',""")
+          }
+        })
+
+        sqlStatement = sqlStatement.replace( """#columns#""", "rec_modified_by")
+        sqlStatement = sqlStatement.replace( """#values#""", callContext.currentUserId.toString).concat("""#columns# = '#values#'""")
+        sqlStatement = sqlStatement.replace( """#columns#""", "rec_modified_when")
+        sqlStatement = sqlStatement.replace( """#values#""", DateTime.now().toString())
+        sqlStatement = sqlStatement.concat(""" WHERE #columns# = '#values#'""".replace("#columns#", keyName).replace("#values#", keyValue))
+
+        try {
+          val conn = callContext.connection.get
+          val statement = conn.createStatement()
+          val res = statement.executeUpdate(sqlStatement)
+        } catch {
+          case e: SQLException => throw e
+          case e: Exception => throw e
+        }
+      }
+    }
+  }
 }
 

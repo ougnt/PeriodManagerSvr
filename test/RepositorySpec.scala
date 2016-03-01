@@ -37,6 +37,35 @@ class RepositorySpec extends Specification {
 
       res must beSameUsageStatistics(usageStat)
     }
+
+    """be able to be updated""" in {
+
+      // Setup
+      implicit var context = new CoreContext
+      context.connect()
+      val device = new Device() {
+        recStatus = 1
+      }
+
+      val usageStat = new UsageStatistics() {
+        deviceId = device.deviceId
+        applicationVersion = "1"
+
+        recStatus = 1
+      }
+      device.insert()
+      usageStat.insert()
+
+      usageStat.applicationVersion = "2"
+
+      // Execute
+      usageStat.insertOrUpdate("device_id", usageStat.deviceId.toString)
+
+      // Verify
+      val ret = new UsageStatistics().get("device_id", usageStat.deviceId.toString).head.asInstanceOf[UsageStatistics]
+
+      ret must beSameUsageStatistics(usageStat)
+    }
   }
 
   """device""" should {
