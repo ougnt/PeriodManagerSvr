@@ -27,6 +27,11 @@ trait InjectAble {
 
   def insert(): Unit ={
 
+    if(callContext.connection.isEmpty) {
+
+      callContext.connect()
+    }
+
     var sqlStatement =
       """INSERT INTO %s
         |(#columns#)
@@ -74,6 +79,11 @@ trait InjectAble {
   }
 
   def get(keyName : String, keyValue : String) : Seq[InjectAble] = {
+
+    if(callContext.connection.isEmpty) {
+
+      callContext.connect()
+    }
 
     val sqlStatement = """SELECT * FROM %s_vu WHERE %s = '%s'""".format(tableName, keyName, keyValue)
     var hasData = false
@@ -142,6 +152,11 @@ trait InjectAble {
   }
 
   def insertOrUpdate(keyName : String, keyValue : String) = {
+
+    if(callContext.connection.isEmpty) {
+
+      callContext.connect()
+    }
 
     try{
       insert()

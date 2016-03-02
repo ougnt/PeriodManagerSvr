@@ -1,3 +1,4 @@
+import java.sql.SQLException
 import java.util.UUID
 
 import context.CoreContext
@@ -38,7 +39,7 @@ class RepositorySpec extends Specification {
       res must beSameUsageStatistics(usageStat)
     }
 
-    """be able to be updated""" in {
+    """be able to be updated when the key is existing with function insertOrUpdate""" in {
 
       // Setup
       implicit var context = new CoreContext
@@ -65,6 +66,108 @@ class RepositorySpec extends Specification {
       val ret = new UsageStatistics().get("device_id", usageStat.deviceId.toString).head.asInstanceOf[UsageStatistics]
 
       ret must beSameUsageStatistics(usageStat)
+    }
+
+    """be able to be inserted when the key is not existing with function insertOrUpdate""" in {
+
+      // Setup
+      implicit var context = new CoreContext
+      context.connect()
+      val device = new Device() {
+        recStatus = 1
+      }
+
+      val usageStat = new UsageStatistics() {
+        deviceId = device.deviceId
+        applicationVersion = "1"
+
+        recStatus = 1
+      }
+      device.insert()
+
+      // Execute
+      usageStat.insertOrUpdate("device_id", usageStat.deviceId.toString)
+
+      // Verify
+      val ret = new UsageStatistics().get("device_id", usageStat.deviceId.toString).head.asInstanceOf[UsageStatistics]
+
+      ret must beSameUsageStatistics(usageStat)
+    }
+
+    """reconnect when the connection is disconnected with function insertOrUpdate""" in {
+
+      // Setup
+      implicit var context = new CoreContext
+      val device = new Device() {
+        recStatus = 1
+      }
+
+      val usageStat = new UsageStatistics() {
+        deviceId = device.deviceId
+        applicationVersion = "1"
+
+        recStatus = 1
+      }
+      device.insert()
+      usageStat.insert()
+
+      usageStat.applicationVersion = "2"
+
+      // Execute
+      usageStat.insertOrUpdate("device_id", usageStat.deviceId.toString)
+
+      // Verify
+      val ret = new UsageStatistics().get("device_id", usageStat.deviceId.toString).head.asInstanceOf[UsageStatistics]
+
+      ret must beSameUsageStatistics(usageStat)
+    }
+
+    """throw SQLException when the username is incorrect with function insertOrUpdate""" in {
+
+      // Setup
+      implicit var context = new CoreContext
+      context.url = "jdbc:mysql://localhost:3306/period_manager?user=invalid&password=invalid"
+      val device = new Device() {
+        recStatus = 1
+      }
+
+      val usageStat = new UsageStatistics() {
+        deviceId = device.deviceId
+        applicationVersion = "1"
+
+        recStatus = 1
+      }
+      device.insert()  must throwA[SQLException]
+      usageStat.insert() must throwA[SQLException]
+
+      usageStat.applicationVersion = "2"
+
+      // Execute // Verify
+      usageStat.insertOrUpdate("device_id", usageStat.deviceId.toString) must throwA[SQLException]("""Access denied for user""")
+    }
+
+    """throw SQLException when the connection is down with function insertOrUpdate""" in {
+
+      // Setup
+      implicit var context = new CoreContext
+      context.url = "jdbc:mysql://localhost:9999/period_manager?user=root&password="
+      val device = new Device() {
+        recStatus = 1
+      }
+
+      val usageStat = new UsageStatistics() {
+        deviceId = device.deviceId
+        applicationVersion = "1"
+
+        recStatus = 1
+      }
+      device.insert()  must throwA[SQLException]
+      usageStat.insert() must throwA[SQLException]
+
+      usageStat.applicationVersion = "2"
+
+      // Execute // Verify
+      usageStat.insertOrUpdate("device_id", usageStat.deviceId.toString) must throwA[SQLException]("Communications link failure")
     }
   }
 
