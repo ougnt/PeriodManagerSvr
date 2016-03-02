@@ -78,14 +78,22 @@ trait InjectAble {
     }
   }
 
-  def get(keyName : String, keyValue : String) : Seq[InjectAble] = {
+  def get(keyValues: Seq[(String, String)]) : Seq[InjectAble] = {
 
     if(callContext.connection.isEmpty) {
 
       callContext.connect()
     }
 
-    val sqlStatement = """SELECT * FROM %s_vu WHERE %s = '%s'""".format(tableName, keyName, keyValue)
+    var sqlStatement = """SELECT * FROM %s_vu WHERE #columns# = '#values#'""".format(tableName)
+
+    keyValues.foreach( kv =>
+      sqlStatement = sqlStatement.replace("#columns#", kv._1).replace("#values#", kv._2).concat(" AND #columns# = '#values#'")
+    )
+
+    sqlStatement = sqlStatement.replace("""WHERE #columns# = '#values#'""", "")
+    sqlStatement = sqlStatement.replace("""AND #columns# = '#values#'""", "")
+
     var hasData = false
     var returnedSeq: Seq[InjectAble] = Nil
 
@@ -151,7 +159,7 @@ trait InjectAble {
     if(hasData) returnedSeq else Nil
   }
 
-  def insertOrUpdate(keyName : String, keyValue : String) = {
+  def insertOrUpdate(keyValues: Seq[(String, String)]) = {
 
     if(callContext.connection.isEmpty) {
 
@@ -192,8 +200,14 @@ trait InjectAble {
         sqlStatement = sqlStatement.replace( """#columns#""", "rec_modified_by")
         sqlStatement = sqlStatement.replace( """#values#""", callContext.currentUserId.toString).concat("""#columns# = '#values#'""")
         sqlStatement = sqlStatement.replace( """#columns#""", "rec_modified_when")
-        sqlStatement = sqlStatement.replace( """#values#""", DateTime.now().toString())
-        sqlStatement = sqlStatement.concat(""" WHERE #columns# = '#values#'""".replace("#columns#", keyName).replace("#values#", keyValue))
+        sqlStatement = sqlStatement.replace( """#values#""", DateTime.now().toString()).concat(""" WHERE #columns# = '#values#'""")
+
+        keyValues.foreach( kv =>
+          sqlStatement = sqlStatement.replace("#columns#", kv._1).replace("#values#", kv._2).concat("""AND #columns# = '#values#'""")
+        )
+
+        sqlStatement = sqlStatement.replace(""" WHERE #columns# = '#values#'""","")
+        sqlStatement = sqlStatement.replace("""AND #columns# = '#values#'""","")
 
         try {
           val conn = callContext.connection.get

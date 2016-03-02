@@ -34,7 +34,7 @@ class RepositorySpec extends Specification {
       usageStat.insert()
 
       // verify
-      val res = new UsageStatistics().get("device_id", usageStat.deviceId.toString).head.asInstanceOf[UsageStatistics]
+      val res = new UsageStatistics().get(Seq(("device_id", usageStat.deviceId.toString))).head.asInstanceOf[UsageStatistics]
 
       res must beSameUsageStatistics(usageStat)
     }
@@ -57,13 +57,13 @@ class RepositorySpec extends Specification {
       device.insert()
       usageStat.insert()
 
-      usageStat.applicationVersion = "2"
+      usageStat.comment_button_usage_counter = 100
 
       // Execute
-      usageStat.insertOrUpdate("device_id", usageStat.deviceId.toString)
+      usageStat.insertOrUpdate(Seq(("device_id", usageStat.deviceId.toString),("application_version", usageStat.applicationVersion)))
 
       // Verify
-      val ret = new UsageStatistics().get("device_id", usageStat.deviceId.toString).head.asInstanceOf[UsageStatistics]
+      val ret = new UsageStatistics().get(Seq(("device_id", usageStat.deviceId.toString))).head.asInstanceOf[UsageStatistics]
 
       ret must beSameUsageStatistics(usageStat)
     }
@@ -84,12 +84,14 @@ class RepositorySpec extends Specification {
         recStatus = 1
       }
       device.insert()
+      usageStat.applicationVersion = "2"
+      usageStat.comment_button_usage_counter = 22
 
       // Execute
-      usageStat.insertOrUpdate("device_id", usageStat.deviceId.toString)
+      usageStat.insertOrUpdate(Seq(("device_id", usageStat.deviceId.toString),("application_version", usageStat.applicationVersion)))
 
       // Verify
-      val ret = new UsageStatistics().get("device_id", usageStat.deviceId.toString).head.asInstanceOf[UsageStatistics]
+      val ret = new UsageStatistics().get(Seq(("device_id", usageStat.deviceId.toString),("application_version", usageStat.applicationVersion))).head.asInstanceOf[UsageStatistics]
 
       ret must beSameUsageStatistics(usageStat)
     }
@@ -111,13 +113,13 @@ class RepositorySpec extends Specification {
       device.insert()
       usageStat.insert()
 
-      usageStat.applicationVersion = "2"
+      usageStat.menu_summary_click_counter = 100
 
       // Execute
-      usageStat.insertOrUpdate("device_id", usageStat.deviceId.toString)
+      usageStat.insertOrUpdate(Seq(("device_id", usageStat.deviceId.toString),("application_version", usageStat.applicationVersion)))
 
       // Verify
-      val ret = new UsageStatistics().get("device_id", usageStat.deviceId.toString).head.asInstanceOf[UsageStatistics]
+      val ret = new UsageStatistics().get(Seq(("device_id", usageStat.deviceId.toString))).head.asInstanceOf[UsageStatistics]
 
       ret must beSameUsageStatistics(usageStat)
     }
@@ -143,7 +145,7 @@ class RepositorySpec extends Specification {
       usageStat.applicationVersion = "2"
 
       // Execute // Verify
-      usageStat.insertOrUpdate("device_id", usageStat.deviceId.toString) must throwA[SQLException]("""Access denied for user""")
+      usageStat.insertOrUpdate(Seq(("device_id", usageStat.deviceId.toString),("application_version", usageStat.applicationVersion))) must throwA[SQLException]("""Access denied for user""")
     }
 
     """throw SQLException when the connection is down with function insertOrUpdate""" in {
@@ -167,7 +169,7 @@ class RepositorySpec extends Specification {
       usageStat.applicationVersion = "2"
 
       // Execute // Verify
-      usageStat.insertOrUpdate("device_id", usageStat.deviceId.toString) must throwA[SQLException]("Communications link failure")
+      usageStat.insertOrUpdate(Seq(("device_id", usageStat.deviceId.toString),("application_version", usageStat.applicationVersion))) must throwA[SQLException]("Communications link failure")
     }
   }
 
@@ -186,7 +188,7 @@ class RepositorySpec extends Specification {
       initial.insert()
 
       // Verify
-      val ret = new Device().get("device_id", initial.deviceId.toString).head.asInstanceOf[Device]
+      val ret = new Device().get(Seq(("device_id", initial.deviceId.toString))).head.asInstanceOf[Device]
       ret must beSameDevice(initial)
     }
   }
