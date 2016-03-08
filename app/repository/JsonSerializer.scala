@@ -36,6 +36,7 @@ class JsonSerializerImpl extends JsonSerializer {
         menu_summary_click_counter = (usageStatJson \ "menu_summary_click_counter" toString()).toInt
         menu_month_view_click_counter = (usageStatJson \ "menu_month_view_click_counter" toString()).toInt
         menu_help_click_counter = (usageStatJson \ "menu_help_click_counter" toString()).toInt
+        menu_review_click_counter = (usageStatJson \ "menu_review_click_counter" toString()).toInt
       }
     } catch {
       case e: Exception => return None

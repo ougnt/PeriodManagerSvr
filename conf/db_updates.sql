@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS usage_stat (
 	menu_summary_click_counter INT NOT NULL,
 	menu_month_view_click_counter INT NOT NULL,
 	menu_help_click_counter INT NOT NULL,
+	menu_review_click_counter INT NOT NULL,
 	rec_created_by VARCHAR(36) NOT NULL,
 	rec_created_when VARCHAR(128) NOT NULL,
 	rec_modified_by VARCHAR(36),
@@ -83,8 +84,8 @@ CREATE TABLE IF NOT EXISTS usage_stat (
 	FOREIGN KEY (rec_status) REFERENCES rec_status_ref (rec_status_id),
 	FOREIGN KEY (rec_created_by) REFERENCES users(user_id),
 	FOREIGN KEY (rec_modified_by) REFERENCES users(user_id),
-	PRIMARY KEY (usage_id, application_version),
-	UNIQUE (device_id)
+	PRIMARY KEY (usage_id),
+	UNIQUE (device_id, application_version)
 );
 
 CREATE OR REPLACE VIEW usage_stat_vu AS SELECT * FROM usage_stat;
