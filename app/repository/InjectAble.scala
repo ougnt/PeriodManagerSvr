@@ -73,8 +73,14 @@ trait InjectAble {
       val statement = conn.createStatement()
       val res = statement.executeUpdate(sqlStatement)
     } catch {
-      case e : SQLException => throw e
-      case e : Exception => throw e
+      case ex : SQLException => {
+        Console.println(ex.getMessage)
+        throw ex
+      }
+      case ex : Exception => {
+        Console.println(ex.getMessage)
+        throw ex
+      }
     }
   }
 
@@ -214,8 +220,12 @@ trait InjectAble {
           val statement = conn.createStatement()
           val res = statement.executeUpdate(sqlStatement)
         } catch {
-          case e: SQLException => throw e
-          case e: Exception => throw e
+          case ex: SQLException => {
+            throw ex
+          }
+          case ex: Exception => {
+            throw ex
+          }
         }
       }
     }

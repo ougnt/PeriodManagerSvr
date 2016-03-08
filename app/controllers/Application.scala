@@ -2,7 +2,7 @@ package controllers
 
 import context.CoreContext
 import play.api.mvc._
-import repository.{JsonSerializer, JsonSerializerImpl}
+import repository.{Device, JsonSerializer, JsonSerializerImpl}
 
 object Application extends Controller {
 
@@ -34,6 +34,9 @@ object Application extends Controller {
     } else if(ret.isEmpty){
 
       try {
+        val device = new Device
+        device.deviceId = stat.get.deviceId
+        device.insertOrUpdate(Seq(("device_id",device.deviceId toString)))
         stat.get.insertOrUpdate(
           Seq(("device_id", stat.get.deviceId.toString),
             ("application_version", stat.get.applicationVersion)))
