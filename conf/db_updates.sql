@@ -2,6 +2,10 @@
 -- version 1.0
 -- -------------------------------------------
 
+CREATE DATABASE IF NOT EXISTS Period_Core;
+
+USE Period_Core;
+
 CREATE TABLE IF NOT EXISTS rec_status_ref (
 
 	rec_status_id INT NOT NULL PRIMARY KEY,
