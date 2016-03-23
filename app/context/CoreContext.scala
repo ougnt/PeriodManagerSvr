@@ -10,7 +10,7 @@ import java.util.UUID
 class CoreContext {
 
   var connection: Option[Connection] = None
-  var url: String = "jdbc:mysql://localhost:3306/period_manager?user=root&password="
+  var url: String = "jdbc:mysql://localhost:3306/period_manager?user=root&password=Apibkk123*"
   var currentUserId: UUID = UUID.fromString("""a9998ce6-da2d-11e5-b5d2-0a1d41d68578""")
 
   def connect() : Unit = {

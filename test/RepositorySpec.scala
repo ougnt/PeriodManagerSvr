@@ -2,14 +2,14 @@ import java.sql.SQLException
 import java.util.UUID
 
 import context.CoreContext
+import org.joda.time.DateTime
 import org.specs2.matcher.Matcher
-import org.specs2.mutable.Specification
-import repository.{Device, UsageStatistics}
+import repository.{DailyUsage, Device, UsageStatistics}
 
 /**
   * * # Created by wacharint on 2/19/16.
   **/
-class RepositorySpec extends Specification {
+class RepositorySpec extends BasedSpec {
 
   """UsageStatistics""" should {
 
@@ -193,6 +193,70 @@ class RepositorySpec extends Specification {
     }
   }
 
+  """DailyUsage""" should {
+
+    """be able to be injected and get""" in {
+
+      // Setup
+      val initialDevice = new Device
+      initialDevice.insert()
+
+      val usage = new DailyUsage{
+        deviceId = initialDevice.deviceId
+        dataDate = DateTime.now
+        dataHour = 12
+        usageCounter = 2
+      }
+
+      //Execute
+      usage.insert
+
+      // Verify
+      val retUsage: Seq[DailyUsage] = new DailyUsage().get(Seq(
+        ("device_id", initialDevice.deviceId.toString),
+        ("data_hour", "12"))
+      ).asInstanceOf[Seq[DailyUsage]]
+
+      retUsage.size mustEqual 1
+      retUsage.head must beSameDailyUsage(usage)
+    }
+
+    """be able to be updated and get""" in {
+
+      // Setup
+      val initialDevice = new Device
+      initialDevice.insert()
+
+      val usage = new DailyUsage{
+        deviceId = initialDevice.deviceId
+        dataDate = DateTime.parse("2016-03-03T00:00:00.000+07:00")
+        dataHour = 12
+        usageCounter = 2
+      }
+
+      usage.insert
+
+      usage.usageCounter = 10
+
+      //Execute
+      usage.insertOrUpdate(Seq(
+        ("device_id", initialDevice.deviceId.toString),
+        ("data_hour", "12"),
+        ("data_date", "2016-03-03T00:00:00.000+07:00"))
+      )
+
+      // Verify
+      val retUsage: Seq[DailyUsage] = new DailyUsage().get(Seq(
+        ("device_id", initialDevice.deviceId.toString),
+        ("data_hour", "12"),
+        ("data_date", "2016-03-03T00:00:00.000+07:00"))
+      ).asInstanceOf[Seq[DailyUsage]]
+
+      retUsage.size mustEqual 1
+      retUsage.head must beSameDailyUsage(usage)
+    }
+  }
+
   def beSameDevice(expect: Device): Matcher[Device] = (actual: Device) => (
     expect.deviceId == actual.deviceId,
     "Same device",
@@ -220,4 +284,17 @@ class RepositorySpec extends Specification {
     "Same UsageStatistics",
     "Difference UsageStatistics"
     )
+
+  def beSameDailyUsage(expect: DailyUsage): Matcher[DailyUsage] = (actual: DailyUsage) => (
+    expect.dataDate.toString("yyyy-MM-dd").equals(actual.dataDate.toString("yyyy-MM-dd")) &&
+    expect.dataHour == actual.dataHour &&
+    expect.deviceId.toString.equals(actual.deviceId.toString) &&
+    expect.usageCounter == actual.usageCounter,
+    "Same daily usage",
+    "The entered DailyUsages are not the same"
+    )
+
+  override protected def beforeAll(): Unit = {}
+
+  override protected def afterAll(): Unit = {}
 }

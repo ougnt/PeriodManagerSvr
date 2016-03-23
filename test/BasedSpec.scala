@@ -21,6 +21,7 @@ abstract trait BasedSpec extends Specification {
 
   private def ultimateBeforeAll() = {
 
+
     context.connect()
     context.connection.get.setAutoCommit(false)
   }
