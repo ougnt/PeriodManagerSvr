@@ -203,18 +203,19 @@ class RepositorySpec extends BasedSpec {
 
       val usage = new DailyUsage{
         deviceId = initialDevice.deviceId
-        dataDate = DateTime.now
+        dataDate = DateTime.now.toString("YYYY-MM-DD")
         dataHour = 12
         usageCounter = 2
       }
 
       //Execute
-      usage.insert
+      usage.insert()
 
       // Verify
       val retUsage: Seq[DailyUsage] = new DailyUsage().get(Seq(
         ("device_id", initialDevice.deviceId.toString),
-        ("data_hour", "12"))
+        ("data_hour", "12"),
+        ("data_date", DateTime.now.toString("YYYY-MM-DD")))
       ).asInstanceOf[Seq[DailyUsage]]
 
       retUsage.size mustEqual 1
@@ -229,7 +230,7 @@ class RepositorySpec extends BasedSpec {
 
       val usage = new DailyUsage{
         deviceId = initialDevice.deviceId
-        dataDate = DateTime.parse("2016-03-03T00:00:00.000+07:00")
+        dataDate = DateTime.now.toString("YYYY-MM-dd")
         dataHour = 12
         usageCounter = 2
       }
@@ -242,14 +243,50 @@ class RepositorySpec extends BasedSpec {
       usage.insertOrUpdate(Seq(
         ("device_id", initialDevice.deviceId.toString),
         ("data_hour", "12"),
-        ("data_date", "2016-03-03T00:00:00.000+07:00"))
+        ("data_date", DateTime.now.toString("YYYY-MM-dd")))
       )
 
       // Verify
       val retUsage: Seq[DailyUsage] = new DailyUsage().get(Seq(
         ("device_id", initialDevice.deviceId.toString),
         ("data_hour", "12"),
-        ("data_date", "2016-03-03T00:00:00.000+07:00"))
+        ("data_date", DateTime.now.toString("YYYY-MM-dd")))
+      ).asInstanceOf[Seq[DailyUsage]]
+
+      retUsage.size mustEqual 1
+      retUsage.head must beSameDailyUsage(usage)
+    }
+
+    """be able to be updated and get when there is another record of the device in other day""" in {
+
+      // Setup
+      val initialDevice = new Device
+      initialDevice.insert()
+
+      val usage = new DailyUsage{
+        deviceId = initialDevice.deviceId
+        dataDate = DateTime.now.minusDays(1).toString("YYYY-MM-dd")
+        dataHour = 12
+        usageCounter = 2
+      }
+
+      usage.insert
+
+      usage.usageCounter = 10
+      usage.dataDate = DateTime.now.toString("YYYY-MM-dd")
+
+      //Execute
+      usage.insertOrUpdate(Seq(
+        ("device_id", initialDevice.deviceId.toString),
+        ("data_hour", "12"),
+        ("data_date", DateTime.now.toString("YYYY-MM-dd")))
+      )
+
+      // Verify
+      val retUsage: Seq[DailyUsage] = new DailyUsage().get(Seq(
+        ("device_id", initialDevice.deviceId.toString),
+        ("data_hour", "12"),
+        ("data_date", DateTime.now.toString("YYYY-MM-dd")))
       ).asInstanceOf[Seq[DailyUsage]]
 
       retUsage.size mustEqual 1
@@ -286,7 +323,7 @@ class RepositorySpec extends BasedSpec {
     )
 
   def beSameDailyUsage(expect: DailyUsage): Matcher[DailyUsage] = (actual: DailyUsage) => (
-    expect.dataDate.toString("yyyy-MM-dd").equals(actual.dataDate.toString("yyyy-MM-dd")) &&
+    expect.dataDate.toString().equals(actual.dataDate.toString()) &&
     expect.dataHour == actual.dataHour &&
     expect.deviceId.toString.equals(actual.deviceId.toString) &&
     expect.usageCounter == actual.usageCounter,

@@ -4,7 +4,6 @@ import java.lang.reflect.Field
 import java.util.UUID
 
 import context.CoreContext
-import org.joda.time.DateTime
 import repositories.InjectAble
 
 /**
@@ -13,7 +12,7 @@ import repositories.InjectAble
 class DailyUsage(implicit context: CoreContext) extends InjectAble {
 
   var deviceId: UUID = null
-  var dataDate: DateTime = null
+  var dataDate: String = null
   var dataHour: Int = 0
   var usageCounter: Int = 0
 
