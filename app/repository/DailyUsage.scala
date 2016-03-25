@@ -12,6 +12,7 @@ import repositories.InjectAble
 class DailyUsage(implicit context: CoreContext) extends InjectAble {
 
   var deviceId: UUID = null
+  var applicationVersion: String = ""
   var dataDate: String = null
   var dataHour: Int = 0
   var usageCounter: Int = 0

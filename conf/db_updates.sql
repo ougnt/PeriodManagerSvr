@@ -106,28 +106,46 @@ SHOW ENGINE INNODB STATUS;
 -- version 2.0
 -- -------------------------------------------
 
-UPDATE	db_info
-SET		db_version = 2,
-		`rec_modified_by`= `rec_created_by`,
-		`rec_modified_when` = CURRENT_TIMESTAMP();
+UPDATE db_info
+SET db_version = 2,
+  `rec_modified_by`= `rec_created_by`,
+  `rec_modified_when` = CURRENT_TIMESTAMP();
 
 CREATE TABLE IF NOT EXISTS daily_usage
 (
-	daily_usage_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	device_id VARCHAR(36) NOT NULL,
-	data_date VARCHAR(128) NOT NULL,
-	data_hour INT NOT NULL,
-	usage_counter INT NOT NULL,
-	rec_created_by VARCHAR(36) NOT NULL,
-	rec_created_when VARCHAR(128) NOT NULL,
-	rec_modified_by VARCHAR(36),
-	rec_modified_when VARCHAR(128),
-	rec_status INT NOT NULL,
-	FOREIGN KEY (rec_created_by) REFERENCES users(user_id),
-	FOREIGN KEY (rec_modified_by) REFERENCES users(user_id),
-	FOREIGN KEY (device_id) REFERENCES device_info(device_id),
-	CONSTRAINT UNIQUE KEY (device_id, data_date)
+ daily_usage_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ device_id VARCHAR(36) NOT NULL,
+ data_date VARCHAR(128) NOT NULL,
+ data_hour INT NOT NULL,
+ usage_counter INT NOT NULL,
+ rec_created_by VARCHAR(36) NOT NULL,
+ rec_created_when VARCHAR(128) NOT NULL,
+ rec_modified_by VARCHAR(36),
+ rec_modified_when VARCHAR(128),
+ rec_status INT NOT NULL,
+ FOREIGN KEY (rec_created_by) REFERENCES users(user_id),
+ FOREIGN KEY (rec_modified_by) REFERENCES users(user_id),
+ FOREIGN KEY (device_id) REFERENCES device_info(device_id),
+ CONSTRAINT UNIQUE KEY (device_id, data_date, data_hour)
 );
+
+CREATE OR REPLACE VIEW daily_usage_vu AS (SELECT * FROM daily_usage);
+
+SHOW ENGINE INNODB STATUS;
+
+-- -------------------------------------------
+-- version 3.0
+-- -------------------------------------------
+
+UPDATE db_info
+SET db_version = 3,
+  `rec_modified_by`= `rec_created_by`,
+  `rec_modified_when` = CURRENT_TIMESTAMP();
+
+ALTER TABLE daily_usage
+ADD COLUMN application_version VARCHAR(10) NOT NULL DEFAULT '25' AFTER device_id;
+
+ALTER TABLE daily_usage ALTER COLUMN application_version DROP DEFAULT;
 
 CREATE OR REPLACE VIEW daily_usage_vu AS (SELECT * FROM daily_usage);
 

@@ -257,6 +257,50 @@ class RepositorySpec extends BasedSpec {
       retUsage.head must beSameDailyUsage(usage)
     }
 
+    """create a new entry when the data is update in a difference time but the same day""" in {
+
+      // Setup
+      val initialDevice = new Device
+      initialDevice.insert()
+
+      val usage = new DailyUsage{
+        deviceId = initialDevice.deviceId
+        dataDate = DateTime.now.toString("YYYY-MM-dd")
+        dataHour = 11
+        usageCounter = 2
+      }
+
+      usage.insert
+
+      usage.usageCounter = 10
+      usage.dataHour = 12
+
+      //Execute
+      usage.insertOrUpdate(Seq(
+        ("device_id", initialDevice.deviceId.toString),
+        ("data_hour", "12"),
+        ("data_date", DateTime.now.toString("YYYY-MM-dd")))
+      )
+
+      // Verify
+      var retUsage: Seq[DailyUsage] = new DailyUsage().get(Seq(
+        ("device_id", initialDevice.deviceId.toString),
+        ("data_hour", "12"),
+        ("data_date", DateTime.now.toString("YYYY-MM-dd")))
+      ).asInstanceOf[Seq[DailyUsage]]
+
+      retUsage.size mustEqual 1
+      retUsage.head must beSameDailyUsage(usage)
+
+      retUsage = new DailyUsage().get(Seq(
+        ("device_id", initialDevice.deviceId.toString),
+        ("data_hour", "11"),
+        ("data_date", DateTime.now.toString("YYYY-MM-dd")))
+      ).asInstanceOf[Seq[DailyUsage]]
+
+      retUsage.size mustEqual 1
+    }
+
     """be able to be updated and get when there is another record of the device in other day""" in {
 
       // Setup

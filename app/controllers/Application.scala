@@ -1,12 +1,15 @@
 package controllers
 
 import context.CoreContext
+import org.joda.time.DateTime
 import play.api.mvc._
-import repository.{Device, JsonSerializer, JsonSerializerImpl}
+import repositories.InjectAble
+import repository.{DailyUsage, Device, JsonSerializer, JsonSerializerImpl}
 
 object Application extends Controller {
 
   var overridedSerializer: Option[JsonSerializer] = None
+  var overridedInjectables: Seq[InjectAble] = Nil
 
   val NoContentReturnMessage = """{"Result":"Error - No content"}"""
   val ResultOkReturnMessage = """{"Result":"Ok"}"""
@@ -20,7 +23,7 @@ object Application extends Controller {
 
     implicit val context = new CoreContext
 
-    val reqJson = request.body.asJson.getOrElse(null)
+    val reqJson = request.body.asJson.orNull
     var ret: Option[Result] = None
 
     val newSerializer = if(overridedSerializer.isEmpty) new JsonSerializerImpl else overridedSerializer.get
@@ -41,6 +44,8 @@ object Application extends Controller {
           Seq(("device_id", stat.get.deviceId.toString),
             ("application_version", stat.get.applicationVersion)))
 
+        updateDailyStat(device, stat.get.applicationVersion)
+
         ret = Some(Ok(ResultOkReturnMessage))
       } catch {
 
@@ -53,4 +58,40 @@ object Application extends Controller {
     ret.get
   }}
 
+  def updateDailyStat(device: Device, appVersion: String)(implicit context: CoreContext) = {
+
+    val currentDate = DateTime.now
+    val criteria = Seq(
+      ("device_id", device.deviceId.toString),
+      ("data_hour", currentDate.getHourOfDay.toString),
+      ("data_date", currentDate.toString("YYYY-MM-dd")))
+
+    val usageInDbs = if(overridedInjectables == Nil)
+      new DailyUsage().get(criteria).asInstanceOf[Seq[DailyUsage]]
+    else
+      overridedInjectables
+
+    var usage = 0
+
+    if(usageInDbs.isEmpty) {
+
+      // Insert a new dailyUsage
+      usage = 1
+    } else {
+
+      // add the counter
+      usage = usageInDbs.head.asInstanceOf[DailyUsage].usageCounter + 1
+    }
+
+    val dailyUsage = new DailyUsage() {
+
+      deviceId = device.deviceId
+      applicationVersion = appVersion
+      dataDate = currentDate.toString("YYYY-MM-dd")
+      dataHour = currentDate.getHourOfDay
+      usageCounter = usage
+    }
+
+    dailyUsage.insertOrUpdate(criteria)
+  }
 }
