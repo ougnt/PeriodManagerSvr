@@ -4,7 +4,8 @@ import java.util.UUID
 import context.CoreContext
 import org.joda.time.DateTime
 import org.specs2.matcher.Matcher
-import repository.{DailyUsage, Device, UsageStatistics}
+import play.api.libs.json.Json
+import repository._
 
 /**
   * * # Created by wacharint on 2/19/16.
@@ -338,6 +339,193 @@ class RepositorySpec extends BasedSpec {
     }
   }
 
+  """JsonSerializer""" should {
+
+    """be able to deserialize the version 25 usageStatistics json""" in {
+
+      // Setup
+      val json = Json.parse("""{
+                                 "deviceId":"65f622f1-ad56-4ccf-a2f2-d58fe0c2ed9f",
+                                 "applicationVersion":25,
+                                 "usageCounter":1,
+                                 "periodButtonUsageCounter":2,
+                                 "nonPeriodButtonUsageCounter":3,
+                                 "comment_button_usage_counter":4,
+                                 "comment_text_usage_counter":5,
+                                 "menu_button_usage_counter":6,
+                                 "review_now":7,
+                                 "review_later":8,
+                                 "review_non":9,
+                                 "fetch_next_usage_counter":10,
+                                 "fetch_previous_usage_counter":11,
+                                 "menu_setting_click_counter":12,
+                                 "menu_summary_click_counter":13,
+                                 "menu_month_view_click_counter":14,
+                                 "menu_help_click_counter":15,
+                                "menu_review_click_counter": 16
+                              }""")
+      val serializer = new JsonSerializerImpl
+
+      val expectedUsageStat = new UsageStatistics() {
+        deviceId = UUID.fromString("65f622f1-ad56-4ccf-a2f2-d58fe0c2ed9f")
+        applicationVersion = "25"
+        usageCounter = 1
+        periodButtonUsageCounter = 2
+        nonPeriodButtonUsageCounter = 3
+        comment_button_usage_counter = 4
+        comment_text_usage_counter = 5
+        menu_button_usage_counter = 6
+        review_now = 7
+        review_later = 8
+        review_non = 9
+        fetch_next_usage_counter = 10
+        fetch_previous_usage_counter = 11
+        menu_setting_click_counter = 12
+        menu_summary_click_counter = 13
+        menu_month_view_click_counter = 14
+        menu_help_click_counter = 15
+        menu_review_click_counter = 16
+        setting_notify_period_usage_counter = 0
+        setting_notify_ovulation_usage_counter = 0
+        setting_notify_period_days = 0
+        setting_notify_ovulation_days = 0
+        setting_notify_notification_click_counter = 0
+      }
+
+      // Execute
+      val res = serializer.jsonToUsageStatistics(json).get
+
+      // Verify
+      res must beSameUsageStatistics(expectedUsageStat)
+    }
+
+    """be able to deserialize the version 26 usageStatistics json""" in {
+
+      // Setup
+      val json = Json.parse("""{
+                                 "deviceId":"65f622f1-ad56-4ccf-a2f2-d58fe0c2ed9f",
+                                 "applicationVersion":26,
+                                 "usageCounter":1,
+                                 "periodButtonUsageCounter":2,
+                                 "nonPeriodButtonUsageCounter":3,
+                                 "comment_button_usage_counter":4,
+                                 "comment_text_usage_counter":5,
+                                 "menu_button_usage_counter":6,
+                                 "review_now":7,
+                                 "review_later":8,
+                                 "review_non":9,
+                                 "fetch_next_usage_counter":10,
+                                 "fetch_previous_usage_counter":11,
+                                 "menu_setting_click_counter":12,
+                                 "menu_summary_click_counter":13,
+                                 "menu_month_view_click_counter":14,
+                                 "menu_help_click_counter":15,
+                                "menu_review_click_counter": 16,
+                                "setting_notify_period_usage_counter": 17,
+                                "setting_notify_ovulation_usage_counter": 18,
+                                "setting_notify_period_days": 19,
+                                "setting_notify_ovulation_days": 20,
+                                "setting_notify_notification_click_counter": 21
+                              }""")
+      val serializer = new JsonSerializerImpl
+
+      val expectedUsageStat = new UsageStatistics() {
+        deviceId = UUID.fromString("65f622f1-ad56-4ccf-a2f2-d58fe0c2ed9f")
+        applicationVersion = "26"
+        usageCounter = 1
+        periodButtonUsageCounter = 2
+        nonPeriodButtonUsageCounter = 3
+        comment_button_usage_counter = 4
+        comment_text_usage_counter = 5
+        menu_button_usage_counter = 6
+        review_now = 7
+        review_later = 8
+        review_non = 9
+        fetch_next_usage_counter = 10
+        fetch_previous_usage_counter = 11
+        menu_setting_click_counter = 12
+        menu_summary_click_counter = 13
+        menu_month_view_click_counter = 14
+        menu_help_click_counter = 15
+        menu_review_click_counter = 16
+        setting_notify_period_usage_counter = 17
+        setting_notify_ovulation_usage_counter = 18
+        setting_notify_period_days = 19
+        setting_notify_ovulation_days = 20
+        setting_notify_notification_click_counter = 21
+      }
+
+      // Execute
+      val res = serializer.jsonToUsageStatistics(json).get
+
+      // Verify
+      res must beSameUsageStatistics(expectedUsageStat)
+    }
+
+    """be able to deserialize the version 25 usageStatistics json with version 26 json""" in {
+
+      // Setup
+      val json = Json.parse("""{
+                                 "deviceId":"65f622f1-ad56-4ccf-a2f2-d58fe0c2ed9f",
+                                 "applicationVersion":25,
+                                 "usageCounter":1,
+                                 "periodButtonUsageCounter":2,
+                                 "nonPeriodButtonUsageCounter":3,
+                                 "comment_button_usage_counter":4,
+                                 "comment_text_usage_counter":5,
+                                 "menu_button_usage_counter":6,
+                                 "review_now":7,
+                                 "review_later":8,
+                                 "review_non":9,
+                                 "fetch_next_usage_counter":10,
+                                 "fetch_previous_usage_counter":11,
+                                 "menu_setting_click_counter":12,
+                                 "menu_summary_click_counter":13,
+                                 "menu_month_view_click_counter":14,
+                                 "menu_help_click_counter":15,
+                                "menu_review_click_counter": 16,
+                                "setting_notify_period_usage_counter": 17,
+                                "setting_notify_ovulation_usage_counter": 18,
+                                "setting_notify_period_days": 19,
+                                "setting_notify_ovulation_days": 20,
+                                "setting_notify_notification_click_counter": 21
+                              }""")
+      val serializer = new JsonSerializerImpl
+
+      val expectedUsageStat = new UsageStatistics() {
+        deviceId = UUID.fromString("65f622f1-ad56-4ccf-a2f2-d58fe0c2ed9f")
+        applicationVersion = "25"
+        usageCounter = 1
+        periodButtonUsageCounter = 2
+        nonPeriodButtonUsageCounter = 3
+        comment_button_usage_counter = 4
+        comment_text_usage_counter = 5
+        menu_button_usage_counter = 6
+        review_now = 7
+        review_later = 8
+        review_non = 9
+        fetch_next_usage_counter = 10
+        fetch_previous_usage_counter = 11
+        menu_setting_click_counter = 12
+        menu_summary_click_counter = 13
+        menu_month_view_click_counter = 14
+        menu_help_click_counter = 15
+        menu_review_click_counter = 16
+        setting_notify_period_usage_counter = 0
+        setting_notify_ovulation_usage_counter = 0
+        setting_notify_period_days = 0
+        setting_notify_ovulation_days = 0
+        setting_notify_notification_click_counter = 0
+      }
+
+      // Execute
+      val res = serializer.jsonToUsageStatistics(json).get
+
+      // Verify
+      res must beSameUsageStatistics(expectedUsageStat)
+    }
+  }
+
   def beSameDevice(expect: Device): Matcher[Device] = (actual: Device) => (
     expect.deviceId == actual.deviceId,
     "Same device",
@@ -361,7 +549,12 @@ class RepositorySpec extends BasedSpec {
     expect.menu_setting_click_counter == actual.menu_setting_click_counter &&
     expect.menu_summary_click_counter == actual.menu_summary_click_counter &&
     expect.menu_month_view_click_counter == actual.menu_month_view_click_counter &&
-    expect.menu_help_click_counter == actual.menu_help_click_counter,
+    expect.menu_help_click_counter == actual.menu_help_click_counter &&
+    expect.setting_notify_notification_click_counter == actual.setting_notify_notification_click_counter &&
+    expect.setting_notify_ovulation_days == actual.setting_notify_ovulation_days &&
+    expect.setting_notify_ovulation_usage_counter == actual.setting_notify_ovulation_usage_counter &&
+    expect.setting_notify_period_days == actual.setting_notify_period_days &&
+    expect.setting_notify_period_usage_counter == actual.setting_notify_period_usage_counter,
     "Same UsageStatistics",
     "Difference UsageStatistics"
     )

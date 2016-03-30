@@ -150,3 +150,23 @@ ALTER TABLE daily_usage ALTER COLUMN application_version DROP DEFAULT;
 CREATE OR REPLACE VIEW daily_usage_vu AS (SELECT * FROM daily_usage);
 
 SHOW ENGINE INNODB STATUS;
+
+-- -------------------------------------------
+-- version 4.0
+-- -------------------------------------------
+
+UPDATE db_info
+SET db_version = 4,
+  `rec_modified_by`= `rec_created_by`,
+  `rec_modified_when` = CURRENT_TIMESTAMP();
+
+ALTER TABLE usage_stat
+ADD COLUMN setting_notify_notification_click_counter INT NOT NULL DEFAULT 0 AFTER menu_review_click_counter,
+ADD COLUMN setting_notify_ovulation_days INT NOT NULL DEFAULT 0 AFTER menu_review_click_counter,
+ADD COLUMN setting_notify_period_days INT NOT NULL DEFAULT 0 AFTER menu_review_click_counter,
+ADD COLUMN setting_notify_ovulation_usage_counter INT NOT NULL DEFAULT 0 AFTER menu_review_click_counter,
+ADD COLUMN setting_notify_period_usage_counter INT NOT NULL DEFAULT 0 AFTER menu_review_click_counter;
+
+CREATE OR REPLACE VIEW usage_stat_vu AS (SELECT * FROM usage_stat);
+
+SHOW ENGINE INNODB STATUS;

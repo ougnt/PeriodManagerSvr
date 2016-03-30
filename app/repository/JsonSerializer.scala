@@ -37,6 +37,16 @@ class JsonSerializerImpl extends JsonSerializer {
         menu_month_view_click_counter = (usageStatJson \ "menu_month_view_click_counter" toString()).toInt
         menu_help_click_counter = (usageStatJson \ "menu_help_click_counter" toString()).toInt
         menu_review_click_counter = (usageStatJson \ "menu_review_click_counter" toString()).toInt
+
+        // These field available in the version 26
+        if(Integer.parseInt(applicationVersion) >= 26) {
+
+          setting_notify_period_usage_counter = (usageStatJson \ "setting_notify_period_usage_counter" toString()).toInt
+          setting_notify_ovulation_usage_counter = (usageStatJson \ "setting_notify_ovulation_usage_counter" toString()).toInt
+          setting_notify_period_days = (usageStatJson \ "setting_notify_period_days" toString()).toInt
+          setting_notify_ovulation_days = (usageStatJson \ "setting_notify_ovulation_days" toString()).toInt
+          setting_notify_notification_click_counter = (usageStatJson \ "setting_notify_notification_click_counter" toString()).toInt
+        }
       }
     } catch {
       case e: Exception => return None
