@@ -38,7 +38,7 @@ class JsonSerializerImpl extends JsonSerializer {
         menu_help_click_counter = (usageStatJson \ "menu_help_click_counter" toString()).toInt
         menu_review_click_counter = (usageStatJson \ "menu_review_click_counter" toString()).toInt
 
-        // These field available in the version 26
+        // These fields available in the version 26
         if(Integer.parseInt(applicationVersion) >= 26) {
 
           setting_notify_period_usage_counter = (usageStatJson \ "setting_notify_period_usage_counter" toString()).toInt
@@ -46,6 +46,12 @@ class JsonSerializerImpl extends JsonSerializer {
           setting_notify_period_days = (usageStatJson \ "setting_notify_period_days" toString()).toInt
           setting_notify_ovulation_days = (usageStatJson \ "setting_notify_ovulation_days" toString()).toInt
           setting_notify_notification_click_counter = (usageStatJson \ "setting_notify_notification_click_counter" toString()).toInt
+        }
+
+        // This field available in the version 29
+        if(Integer.parseInt(applicationVersion) >= 29) {
+          setting_displayed_language = (usageStatJson \ "setting_displayed_language" toString()) replace("\"", "")
+          setting_language_change_usage_counter = (usageStatJson \ "setting_language_change_usage_counter" toString()).toInt
         }
       }
     } catch {

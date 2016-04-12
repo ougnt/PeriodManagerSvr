@@ -47,12 +47,13 @@ class RepositorySpec extends BasedSpec {
       context.connect()
       val device = new Device() {
         recStatus = 1
+        language = "th"
       }
 
       val usageStat = new UsageStatistics() {
         deviceId = device.deviceId
         applicationVersion = "1"
-
+        setting_displayed_language = "th"
         recStatus = 1
       }
       device.insert()
@@ -76,12 +77,14 @@ class RepositorySpec extends BasedSpec {
       context.connect()
       val device = new Device() {
         recStatus = 1
+        language = "th"
       }
 
       val usageStat = new UsageStatistics() {
         deviceId = device.deviceId
         applicationVersion = "1"
-
+        setting_displayed_language = "th"
+        setting_language_change_usage_counter = 1
         recStatus = 1
       }
       device.insert()
@@ -462,6 +465,73 @@ class RepositorySpec extends BasedSpec {
       res must beSameUsageStatistics(expectedUsageStat)
     }
 
+    """be able to deserialize the version 29 usageStatistics json""" in {
+
+      // Setup
+      val json = Json.parse("""{
+                                 "deviceId":"65f622f1-ad56-4ccf-a2f2-d58fe0c2ed9f",
+                                 "applicationVersion":29,
+                                 "usageCounter":1,
+                                 "periodButtonUsageCounter":2,
+                                 "nonPeriodButtonUsageCounter":3,
+                                 "comment_button_usage_counter":4,
+                                 "comment_text_usage_counter":5,
+                                 "menu_button_usage_counter":6,
+                                 "review_now":7,
+                                 "review_later":8,
+                                 "review_non":9,
+                                 "fetch_next_usage_counter":10,
+                                 "fetch_previous_usage_counter":11,
+                                 "menu_setting_click_counter":12,
+                                 "menu_summary_click_counter":13,
+                                 "menu_month_view_click_counter":14,
+                                 "menu_help_click_counter":15,
+                                "menu_review_click_counter": 16,
+                                "setting_notify_period_usage_counter": 17,
+                                "setting_notify_ovulation_usage_counter": 18,
+                                "setting_notify_period_days": 19,
+                                "setting_notify_ovulation_days": 20,
+                                "setting_notify_notification_click_counter": 21,
+                                "setting_language_change_usage_counter" : 1,
+                                "setting_displayed_language" : "th"
+                              }""")
+      val serializer = new JsonSerializerImpl
+
+      val expectedUsageStat = new UsageStatistics() {
+        deviceId = UUID.fromString("65f622f1-ad56-4ccf-a2f2-d58fe0c2ed9f")
+        applicationVersion = "29"
+        usageCounter = 1
+        periodButtonUsageCounter = 2
+        nonPeriodButtonUsageCounter = 3
+        comment_button_usage_counter = 4
+        comment_text_usage_counter = 5
+        menu_button_usage_counter = 6
+        review_now = 7
+        review_later = 8
+        review_non = 9
+        fetch_next_usage_counter = 10
+        fetch_previous_usage_counter = 11
+        menu_setting_click_counter = 12
+        menu_summary_click_counter = 13
+        menu_month_view_click_counter = 14
+        menu_help_click_counter = 15
+        menu_review_click_counter = 16
+        setting_notify_period_usage_counter = 17
+        setting_notify_ovulation_usage_counter = 18
+        setting_notify_period_days = 19
+        setting_notify_ovulation_days = 20
+        setting_notify_notification_click_counter = 21
+        setting_displayed_language = "th"
+        setting_language_change_usage_counter = 1
+      }
+
+      // Execute
+      val res = serializer.jsonToUsageStatistics(json).get
+
+      // Verify
+      res must beSameUsageStatistics(expectedUsageStat)
+    }
+
     """be able to deserialize the version 25 usageStatistics json with version 26 json""" in {
 
       // Setup
@@ -527,7 +597,8 @@ class RepositorySpec extends BasedSpec {
   }
 
   def beSameDevice(expect: Device): Matcher[Device] = (actual: Device) => (
-    expect.deviceId == actual.deviceId,
+    expect.deviceId == actual.deviceId &&
+    expect.language.equals(actual.language),
     "Same device",
     "Both device are difference"
     )
@@ -554,7 +625,9 @@ class RepositorySpec extends BasedSpec {
     expect.setting_notify_ovulation_days == actual.setting_notify_ovulation_days &&
     expect.setting_notify_ovulation_usage_counter == actual.setting_notify_ovulation_usage_counter &&
     expect.setting_notify_period_days == actual.setting_notify_period_days &&
-    expect.setting_notify_period_usage_counter == actual.setting_notify_period_usage_counter,
+    expect.setting_notify_period_usage_counter == actual.setting_notify_period_usage_counter &&
+    expect.setting_language_change_usage_counter == actual.setting_language_change_usage_counter &&
+    expect.setting_displayed_language.equals(actual.setting_displayed_language),
     "Same UsageStatistics",
     "Difference UsageStatistics"
     )

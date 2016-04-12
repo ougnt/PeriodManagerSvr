@@ -39,7 +39,12 @@ object Application extends Controller {
       try {
         val device = new Device
         device.deviceId = stat.get.deviceId
+        if(Integer.parseInt(stat.get.applicationVersion) >= 29) {
+
+          device.language = stat.get.setting_displayed_language
+        }
         device.insertOrUpdate(Seq(("device_id",device.deviceId toString)))
+
         stat.get.insertOrUpdate(
           Seq(("device_id", stat.get.deviceId.toString),
             ("application_version", stat.get.applicationVersion)))

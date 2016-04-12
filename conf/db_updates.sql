@@ -170,3 +170,23 @@ ADD COLUMN setting_notify_period_usage_counter INT NOT NULL DEFAULT 0 AFTER menu
 CREATE OR REPLACE VIEW usage_stat_vu AS (SELECT * FROM usage_stat);
 
 SHOW ENGINE INNODB STATUS;
+
+-- -------------------------------------------
+-- version 5.0
+-- -------------------------------------------
+
+UPDATE db_info
+SET db_version = 5,
+  `rec_modified_by`= `rec_created_by`,
+  `rec_modified_when` = CURRENT_TIMESTAMP();
+
+ALTER TABLE device_info
+ADD COLUMN language VARCHAR(10) AFTER device_id;
+
+CREATE OR REPLACE VIEW device_info_vu AS (SELECT * FROM device_info);
+
+ALTER TABLE `usage_stat`
+ADD COLUMN setting_displayed_language VARCHAR(10) AFTER application_version,
+ADD COLUMN setting_language_change_usage_counter INT AFTER setting_notify_notification_click_counter;
+
+CREATE OR REPLACE VIEW usage_stat_vu AS (SELECT * FROM usage_stat);
