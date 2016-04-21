@@ -190,3 +190,61 @@ ADD COLUMN setting_displayed_language VARCHAR(10) AFTER application_version,
 ADD COLUMN setting_language_change_usage_counter INT AFTER setting_notify_notification_click_counter;
 
 CREATE OR REPLACE VIEW usage_stat_vu AS (SELECT * FROM usage_stat);
+
+-- -------------------------------------------
+-- version 6.0
+-- -------------------------------------------
+
+UPDATE db_info
+SET db_version = 6,
+  `rec_modified_by`= `rec_created_by`,
+  `rec_modified_when` = CURRENT_TIMESTAMP();
+
+CREATE TABLE IF NOT EXISTS experiment (
+	experiment_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	description VARCHAR(255),
+	rec_created_by VARCHAR(36) NOT NULL,
+	rec_created_when VARCHAR(128) NOT NULL,
+	rec_modified_by VARCHAR(36),
+	rec_modified_when VARCHAR(128),
+	rec_status INT NOT NULL DEFAULT 1,
+	FOREIGN KEY (rec_status) REFERENCES rec_status_ref (rec_status_id),
+	FOREIGN KEY (rec_created_by) REFERENCES users(user_id),
+	FOREIGN KEY (rec_modified_by) REFERENCES users(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS experiment_ads_run (
+	experiment_run_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	experiment_id INT NOT NULL,
+	displayed_language VARCHAR(2) NOT NULL,
+	a_ads_url VARCHAR(255),
+	a_ads_show INT,
+	a_ads_click INT,
+	b_ads_url VARCHAR(255),
+	b_ads_show INT,
+	b_ads_click INT,
+	c_ads_url VARCHAR(255),
+	c_ads_show INT,
+	c_ads_click INT,
+	d_ads_url VARCHAR(255),
+	d_ads_show INT,
+	d_ads_click INT,
+	e_ads_url VARCHAR(255),
+	e_ads_show INT,
+	e_ads_click INT,
+	f_ads_url VARCHAR(255),
+	f_ads_show INT,
+	f_ads_click INT,
+	rec_created_by VARCHAR(36) NOT NULL,
+	rec_created_when VARCHAR(128) NOT NULL,
+	rec_modified_by VARCHAR(36),
+	rec_modified_when VARCHAR(128),
+	rec_status INT NOT NULL DEFAULT 1,
+	FOREIGN KEY (rec_status) REFERENCES rec_status_ref (rec_status_id),
+	FOREIGN KEY (rec_created_by) REFERENCES users(user_id),
+	FOREIGN KEY (rec_modified_by) REFERENCES users(user_id),
+	FOREIGN KEY (experiment_id) REFERENCES experiment(experiment_id)
+);
+
+CREATE OR REPLACE VIEW experiment_vu AS (SELECT * FROM experiment);
+CREATE OR REPLACE VIEW experiment_ads_run_vu AS (SELECT * FROM experiment_ads_run);

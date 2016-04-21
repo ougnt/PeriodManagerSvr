@@ -342,6 +342,128 @@ class RepositorySpec extends BasedSpec {
     }
   }
 
+  """Experiment""" should {
+
+    """be able to be inserted""" in {
+
+      // Setup
+      val testExperiment: Experiment = new Experiment{
+
+        description = "test"
+      }
+
+      // Execute
+      testExperiment.insert
+
+      // Verify
+      new Experiment().get(Seq(("description", "test"))).head.asInstanceOf[Experiment] must beSameExperiment(testExperiment)
+    }
+
+    """be able to be updated""" in {
+
+      // Setup
+      val testExperiment: Experiment = new Experiment{
+
+        description = "test"
+      }
+      testExperiment.insert
+      testExperiment.description = "test2"
+
+      // Execute
+      testExperiment.insertOrUpdate(Seq(
+        ("experiment_id",new Experiment().get(Seq(("description", "test"))).head.asInstanceOf[Experiment].experimentId.toString)
+      ))
+
+      // Verify
+      new Experiment().get(Seq(("description", "test2"))).head.asInstanceOf[Experiment] must beSameExperiment(testExperiment)
+    }
+  }
+
+  """ExperimentAdsRun""" should {
+
+    """be able to be inserted""" in {
+
+      // Setup
+      var testExperiment: Experiment = new Experiment()
+      testExperiment.insert()
+      testExperiment = testExperiment.get(Seq(("description",""))).head.asInstanceOf[Experiment]
+
+      val testExperimentRun: ExperimentAdsRun = new ExperimentAdsRun {
+
+        experimentId = testExperiment.experimentId
+        displayedLanguage = "th"
+        aAdsClick = 0
+        aAdsShow = 1
+        aAdsUrl = "http://a.com/a"
+        bAdsClick = 2
+        bAdsShow = 3
+        bAdsUrl = "http://a.com/b"
+        cAdsClick = 4
+        cAdsShow = 5
+        cAdsUrl = "http://a.com/c"
+        dAdsClick = 6
+        dAdsShow = 7
+        dAdsUrl = "http://a.com/d"
+        eAdsClick = 8
+        eAdsShow = 9
+        eAdsUrl = "http://a.com/e"
+        fAdsClick = 10
+        fAdsShow = 11
+        fAdsUrl = "http://a.com/f"
+      }
+
+      // Execute
+      testExperimentRun.insert
+
+      // Verify
+      val actual = new ExperimentAdsRun().get(Seq(("experiment_id",testExperimentRun.experimentId.toString))).head.asInstanceOf[ExperimentAdsRun]
+      actual.experimentRunId = 0
+      actual must beSameExperimentAdsRun(testExperimentRun)
+    }
+
+    """be able to be updated""" in {
+
+      // Setup
+      var testExperiment: Experiment = new Experiment()
+      testExperiment.insert()
+      testExperiment = testExperiment.get(Seq(("description",""))).head.asInstanceOf[Experiment]
+
+      val testExperimentRun: ExperimentAdsRun = new ExperimentAdsRun {
+
+        experimentId = testExperiment.experimentId
+        displayedLanguage = "th"
+        aAdsClick = 0
+        aAdsShow = 1
+        aAdsUrl = "http://a.com/a"
+        bAdsClick = 2
+        bAdsShow = 3
+        bAdsUrl = "http://a.com/b"
+        cAdsClick = 4
+        cAdsShow = 5
+        cAdsUrl = "http://a.com/c"
+        dAdsClick = 6
+        dAdsShow = 7
+        dAdsUrl = "http://a.com/d"
+        eAdsClick = 8
+        eAdsShow = 9
+        eAdsUrl = "http://a.com/e"
+        fAdsClick = 10
+        fAdsShow = 11
+        fAdsUrl = "http://a.com/f"
+      }
+      testExperimentRun.insert
+
+      // Execute
+      val expect = new ExperimentAdsRun().get(Seq(("experiment_id",testExperimentRun.experimentId.toString))).head.asInstanceOf[ExperimentAdsRun]
+      expect.aAdsClick = 10
+      expect.insertOrUpdate(Seq(("experiment_run_id",expect.experimentRunId.toString)))
+
+      // Verify
+      val actual = new ExperimentAdsRun().get(Seq(("experiment_id",testExperimentRun.experimentId.toString))).head.asInstanceOf[ExperimentAdsRun]
+      actual must beSameExperimentAdsRun(expect)
+    }
+  }
+
   """JsonSerializer""" should {
 
     """be able to deserialize the version 25 usageStatistics json""" in {
@@ -640,6 +762,60 @@ class RepositorySpec extends BasedSpec {
     "Same daily usage",
     "The entered DailyUsages are not the same"
     )
+
+  def beSameExperiment(expect: Experiment): Matcher[Experiment] = (actual: Experiment) => (
+    expect.description.equals(actual.description),
+    "Same experiment",
+    "experimentId is not match"
+  )
+
+  def beSameExperimentAdsRun(expect: ExperimentAdsRun): Matcher[ExperimentAdsRun] = (actual: ExperimentAdsRun) => (
+
+    expect.experimentRunId.equals(actual.experimentRunId) &&
+    expect.experimentId.equals(actual.experimentId) &&
+    expect.displayedLanguage.equals(actual.displayedLanguage) &&
+    expect.aAdsUrl.equals(actual.aAdsUrl ) &&
+    expect.aAdsShow.equals(actual.aAdsShow) &&
+    expect.aAdsClick.equals(actual.aAdsClick) &&
+    expect.bAdsUrl.equals(actual.bAdsUrl) &&
+    expect.bAdsShow.equals(actual.bAdsShow) &&
+    expect.bAdsClick.equals(actual.bAdsClick) &&
+    expect.cAdsUrl.equals(actual.cAdsUrl) &&
+    expect.cAdsShow.equals(actual.cAdsShow) &&
+    expect.cAdsClick.equals(actual.cAdsClick) &&
+    expect.dAdsUrl.equals(actual.dAdsUrl) &&
+    expect.dAdsShow.equals(actual.dAdsShow) &&
+    expect.dAdsClick.equals(actual.dAdsClick) &&
+    expect.eAdsUrl.equals(actual.eAdsUrl) &&
+    expect.eAdsShow.equals(actual.eAdsShow) &&
+    expect.eAdsClick.equals(actual.eAdsClick) &&
+    expect.fAdsUrl.equals(actual.fAdsUrl) &&
+    expect.fAdsShow.equals(actual.fAdsShow) &&
+    expect.fAdsClick.equals(actual.fAdsClick),
+    "Same ExperimentAdsRun",
+    if(!expect.experimentRunId.equals(actual.experimentRunId)) "experimentRunId is not equal"
+    else if(!expect.experimentId.equals(actual.experimentId)) "experimentId is not equal"
+    else if(!expect.displayedLanguage.equals(actual.displayedLanguage)) "displayedLanguage is not equal"
+    else if(!expect.aAdsUrl .equals(actual.aAdsUrl )) "aAdsUrl  is not equal"
+    else if(!expect.aAdsShow.equals(actual.aAdsShow)) "aAdsShow is not equal"
+    else if(!expect.aAdsClick.equals(actual.aAdsClick)) "aAdsClick is not equal"
+    else if(!expect.bAdsUrl.equals(actual.bAdsUrl)) "bAdsUrl is not equal"
+    else if(!expect.bAdsShow.equals(actual.bAdsShow)) "bAdsShow is not equal"
+    else if(!expect.bAdsClick.equals(actual.bAdsClick)) "bAdsClick is not equal"
+    else if(!expect.cAdsUrl.equals(actual.cAdsUrl)) "cAdsUrl is not equal"
+    else if(!expect.cAdsShow.equals(actual.cAdsShow)) "cAdsShow is not equal"
+    else if(!expect.cAdsClick.equals(actual.cAdsClick)) "cAdsClick is not equal"
+    else if(!expect.dAdsUrl.equals(actual.dAdsUrl)) "dAdsUrl is not equal"
+    else if(!expect.dAdsShow.equals(actual.dAdsShow)) "dAdsShow is not equal"
+    else if(!expect.dAdsClick.equals(actual.dAdsClick)) "dAdsClick is not equal"
+    else if(!expect.eAdsUrl.equals(actual.eAdsUrl)) "eAdsUrl is not equal"
+    else if(!expect.eAdsShow.equals(actual.eAdsShow)) "eAdsShow is not equal"
+    else if(!expect.eAdsClick.equals(actual.eAdsClick)) "eAdsClick is not equal"
+    else if(!expect.fAdsUrl.equals(actual.fAdsUrl)) "fAdsUrl is not equal"
+    else if(!expect.fAdsShow.equals(actual.fAdsShow)) "fAdsShow is not equal"
+    else if(!expect.fAdsClick.equals(actual.fAdsClick)) "fAdsClick is not equal"
+    else "Something not matched"
+  )
 
   override protected def beforeAll(): Unit = {}
 
