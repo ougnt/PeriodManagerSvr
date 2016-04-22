@@ -56,14 +56,14 @@ trait InjectAble {
       if(value != null) {
 
         sqlStatement = sqlStatement.replace( """#columns#""", field.getName.replaceAll( """([A-Z])""", """_$1""").toLowerCase.concat( """,#columns#"""))
-        sqlStatement = sqlStatement.replace( """#values#""", """'%s',#values#""".format(value.toString))
+        sqlStatement = sqlStatement.replace( """#values#""", """N'%s',#values#""".format(value.toString))
       }
     })
 
     sqlStatement = sqlStatement.replace( """#columns#""", """rec_created_by,#columns#""")
-    sqlStatement = sqlStatement.replace( """#values#""", """'%s',#values#""".format(callContext.currentUserId.toString))
+    sqlStatement = sqlStatement.replace( """#values#""", """N'%s',#values#""".format(callContext.currentUserId.toString))
     sqlStatement = sqlStatement.replace( """#columns#""", """rec_created_when,#columns#""")
-    sqlStatement = sqlStatement.replace( """#values#""", """'%s',#values#""".format(DateTime.now().toString()))
+    sqlStatement = sqlStatement.replace( """#values#""", """N'%s',#values#""".format(DateTime.now().toString()))
 
     sqlStatement = sqlStatement.replace(""",#columns#""", "")
     sqlStatement = sqlStatement.replace(""",#values#""", "")
@@ -91,14 +91,14 @@ trait InjectAble {
       callContext.connect()
     }
 
-    var sqlStatement = """SELECT * FROM %s_vu WHERE #columns# = '#values#'""".format(tableName)
+    var sqlStatement = """SELECT * FROM %s_vu WHERE #columns# = N'#values#'""".format(tableName)
 
     keyValues.foreach( kv =>
-      sqlStatement = sqlStatement.replace("#columns#", kv._1).replace("#values#", kv._2).concat(" AND #columns# = '#values#'")
+      sqlStatement = sqlStatement.replace("#columns#", kv._1).replace("#values#", kv._2).concat(" AND #columns# = N'#values#'")
     )
 
-    sqlStatement = sqlStatement.replace("""WHERE #columns# = '#values#'""", "")
-    sqlStatement = sqlStatement.replace("""AND #columns# = '#values#'""", "")
+    sqlStatement = sqlStatement.replace("""WHERE #columns# = N'#values#'""", "")
+    sqlStatement = sqlStatement.replace("""AND #columns# = N'#values#'""", "")
 
     var hasData = false
     var returnedSeq: Seq[InjectAble] = Nil
@@ -199,21 +199,21 @@ trait InjectAble {
           if (value != null) {
 
             sqlStatement = sqlStatement.replace( """#columns#""", field.getName.replaceAll( """([A-Z])""", """_$1"""))
-            sqlStatement = sqlStatement.replace( """#values#""", value.toString).concat("""#columns# = '#values#',""")
+            sqlStatement = sqlStatement.replace( """#values#""", value.toString).concat("""#columns# = N'#values#',""")
           }
         })
 
         sqlStatement = sqlStatement.replace( """#columns#""", "rec_modified_by")
-        sqlStatement = sqlStatement.replace( """#values#""", callContext.currentUserId.toString).concat("""#columns# = '#values#'""")
+        sqlStatement = sqlStatement.replace( """#values#""", callContext.currentUserId.toString).concat("""#columns# = N'#values#'""")
         sqlStatement = sqlStatement.replace( """#columns#""", "rec_modified_when")
-        sqlStatement = sqlStatement.replace( """#values#""", DateTime.now().toString()).concat(""" WHERE #columns# = '#values#'""")
+        sqlStatement = sqlStatement.replace( """#values#""", DateTime.now().toString()).concat(""" WHERE #columns# = N'#values#'""")
 
         keyValues.foreach( kv =>
-          sqlStatement = sqlStatement.replace("#columns#", kv._1).replace("#values#", kv._2).concat("""AND #columns# = '#values#'""")
+          sqlStatement = sqlStatement.replace("#columns#", kv._1).replace("#values#", kv._2).concat("""AND #columns# = N'#values#'""")
         )
 
-        sqlStatement = sqlStatement.replace(""" WHERE #columns# = '#values#'""","")
-        sqlStatement = sqlStatement.replace("""AND #columns# = '#values#'""","")
+        sqlStatement = sqlStatement.replace(""" WHERE #columns# = N'#values#'""","")
+        sqlStatement = sqlStatement.replace("""AND #columns# = N'#values#'""","")
 
         try {
           val conn = callContext.connection.get

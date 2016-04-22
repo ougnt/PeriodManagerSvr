@@ -14,21 +14,27 @@ class ExperimentAdsRun(implicit context: CoreContext) extends InjectAble {
   var experimentId: Int = 0
   var displayedLanguage = ""
   var aAdsUrl  = ""
+  var aAdsText = ""
   var aAdsShow: Int = 0
   var aAdsClick: Int = 0
   var bAdsUrl = ""
+  var bAdsText = ""
   var bAdsShow: Int = 0
   var bAdsClick: Int = 0
   var cAdsUrl = ""
+  var cAdsText = ""
   var cAdsShow: Int = 0
   var cAdsClick: Int = 0
   var dAdsUrl = ""
+  var dAdsText = ""
   var dAdsShow: Int = 0
   var dAdsClick: Int = 0
   var eAdsUrl = ""
+  var eAdsText = ""
   var eAdsShow: Int = 0
   var eAdsClick: Int = 0
   var fAdsUrl = ""
+  var fAdsText = ""
   var fAdsShow: Int = 0
   var fAdsClick: Int = 0
 

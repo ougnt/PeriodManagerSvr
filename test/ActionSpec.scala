@@ -5,7 +5,9 @@ import controllers.Application
 import org.specs2.mock.Mockito
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.{FakeRequest, PlaySpecification}
-import repository.{JsonSerializer, UsageStatistics}
+import repository.{ExperimentAdsRun, Device, JsonSerializer, UsageStatistics}
+
+import scala.util.Random
 
 /**
   * * # Created by wacharint on 2/29/16.
@@ -18,7 +20,7 @@ class ActionSpec extends PlaySpecification with Mockito with BasedSpec {
 
       // Setup
       val mockSerializer = mock[JsonSerializer]
-      mockSerializer.jsonToUsageStatistics(any[JsValue])(any[CoreContext]) returns Some(new UsageStatistics())
+      mockSerializer.jsonToUsageStatistics(any[JsValue])(any[CoreContext]) returns Some(new UsageStatistics(){applicationVersion = "29"})
       Application.overridedSerializer = Some(mockSerializer)
 
       // Execute
@@ -103,6 +105,71 @@ class ActionSpec extends PlaySpecification with Mockito with BasedSpec {
 
       // Verify
       retText mustEqual """{"Result":"Error - XXX"}"""
+    }
+  }
+
+  """insertDeviceIfNotExists""" should {
+
+    """insert a device if it is not exists""" in {
+
+      // Setup
+      val mockDevice = mock[Device]
+      var isCalled = false
+      mockDevice.get(any[Seq[(String,String)]]) returns Nil
+      mockDevice.insert().answers((any) => {
+        isCalled = true
+      })
+      Application.overridedInjectables = Seq(mockDevice)
+
+      // Execute
+      Application.insertDeviceIfNotExists(UUID.randomUUID(), "ss")
+
+      // Verify
+      isCalled mustEqual true
+    }
+
+    """not insert a device if it is not exists""" in {
+
+      // Setup
+      val mockDevice = mock[Device]
+      var isCalled = false
+      mockDevice.get(any[Seq[(String,String)]]) returns Seq(new Device)
+      mockDevice.insert().answers((any) => {
+        isCalled = true
+      })
+      Application.overridedInjectables = Seq(mockDevice)
+
+      // Execute
+      Application.insertDeviceIfNotExists(UUID.randomUUID(), "ss")
+
+      // Verify
+      isCalled mustEqual false
+    }
+  }
+
+  """getRandomExperimentUrl""" should {
+
+    """return an url of the experiment is running""" in {
+
+      // Setup
+      val mockRandom = mock[Random]
+      mockRandom.nextInt(anyInt) returns 0
+      Application.overridedRandom = Some(mockRandom)
+      val newExperimentRun = mock[ExperimentAdsRun]
+      newExperimentRun.aAdsUrl returns "test"
+      newExperimentRun.aAdsText returns "Hello"
+      newExperimentRun.experimentId returns 10
+      newExperimentRun.experimentRunId returns 11
+
+
+      // Execute
+      val res = Application.getRandomExperimentUrl(newExperimentRun)
+
+      // Verify
+      res._1 mustEqual "test"
+      res._2 mustEqual "Hello"
+      res._3 mustEqual 11
+      res._4 mustEqual 'a'
     }
   }
 

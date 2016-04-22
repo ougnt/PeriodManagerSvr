@@ -8,5 +8,8 @@ GET     /                           controllers.Application.index
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
-
+# application usage
 POST    /usageStat                  controllers.Application.updateStat
+
+GET     /adsAsk                     controllers.Application.adsAsk(deviceId: String ?= "Invalid", language: String ?= "A1")
+GET     /adsClick                   controllers.Application.adsClick(experimentRunId: Int ?= 0, user: String ?= "")

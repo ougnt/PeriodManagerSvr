@@ -775,21 +775,27 @@ class RepositorySpec extends BasedSpec {
     expect.experimentId.equals(actual.experimentId) &&
     expect.displayedLanguage.equals(actual.displayedLanguage) &&
     expect.aAdsUrl.equals(actual.aAdsUrl ) &&
+    expect.aAdsText.equals(actual.aAdsText ) &&
     expect.aAdsShow.equals(actual.aAdsShow) &&
     expect.aAdsClick.equals(actual.aAdsClick) &&
     expect.bAdsUrl.equals(actual.bAdsUrl) &&
+    expect.bAdsText.equals(actual.bAdsText ) &&
     expect.bAdsShow.equals(actual.bAdsShow) &&
     expect.bAdsClick.equals(actual.bAdsClick) &&
     expect.cAdsUrl.equals(actual.cAdsUrl) &&
+    expect.cAdsText.equals(actual.cAdsText ) &&
     expect.cAdsShow.equals(actual.cAdsShow) &&
     expect.cAdsClick.equals(actual.cAdsClick) &&
     expect.dAdsUrl.equals(actual.dAdsUrl) &&
+    expect.dAdsText.equals(actual.dAdsText ) &&
     expect.dAdsShow.equals(actual.dAdsShow) &&
     expect.dAdsClick.equals(actual.dAdsClick) &&
     expect.eAdsUrl.equals(actual.eAdsUrl) &&
+    expect.eAdsText.equals(actual.eAdsText ) &&
     expect.eAdsShow.equals(actual.eAdsShow) &&
     expect.eAdsClick.equals(actual.eAdsClick) &&
     expect.fAdsUrl.equals(actual.fAdsUrl) &&
+    expect.fAdsText.equals(actual.fAdsText ) &&
     expect.fAdsShow.equals(actual.fAdsShow) &&
     expect.fAdsClick.equals(actual.fAdsClick),
     "Same ExperimentAdsRun",
@@ -814,7 +820,7 @@ class RepositorySpec extends BasedSpec {
     else if(!expect.fAdsUrl.equals(actual.fAdsUrl)) "fAdsUrl is not equal"
     else if(!expect.fAdsShow.equals(actual.fAdsShow)) "fAdsShow is not equal"
     else if(!expect.fAdsClick.equals(actual.fAdsClick)) "fAdsClick is not equal"
-    else "Something not matched"
+    else "Ads text not matched"
   )
 
   override protected def beforeAll(): Unit = {}
