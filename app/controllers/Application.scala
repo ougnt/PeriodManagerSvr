@@ -32,6 +32,7 @@ object Application extends Controller {
 
     val experimentRun = getExperimentRun(UUID.fromString(deviceId), language)
     val randomExp = getRandomExperimentUrl(experimentRun)
+
     Ok(
       """{"AdsUrl":"%s","AdsText":"%s", "experimentRunId":"%s", "experimentUser":"%s"}"""
         .format(randomExp._1, randomExp._2, randomExp._3, randomExp._4  )
@@ -160,13 +161,17 @@ object Application extends Controller {
 
   def getExperimentRun(deviceId: UUID, language: String)(implicit context: CoreContext): ExperimentAdsRun = {
 
-    new ExperimentAdsRun().get(Seq(("rec_status","1"))).head.asInstanceOf[ExperimentAdsRun]
+    val res = new ExperimentAdsRun().get(Seq(("rec_status","1"),("displayed_language",language))).asInstanceOf[Seq[ExperimentAdsRun]]
+    if(res.isEmpty)
+      new ExperimentAdsRun()
+    else
+      res.head
   }
 
   def getRandomExperimentUrl(experimentAdsRun: ExperimentAdsRun)(implicit context: CoreContext): (String, String, Int, Char) = {
 
     val random = if(overridedRandom.isEmpty) new Random else overridedRandom.get
-    val randomNumber = random.nextInt(5)
+    val randomNumber = random.nextInt(6)
     var retUrl = ""
     var retText = ""
     var experimentUser: Char = Char.MinValue
@@ -209,7 +214,10 @@ object Application extends Controller {
       experimentUser = 'f'
     }
 
-    experimentAdsRun.insertOrUpdate(Seq(("experiment_run_id",experimentAdsRun.experimentRunId.toString)))
+    if(!experimentAdsRun.aAdsUrl.equals("")) {
+      experimentAdsRun.insertOrUpdate(Seq(("experiment_run_id", experimentAdsRun.experimentRunId.toString)))
+    }
+
     (retUrl, retText, experimentAdsRun.experimentRunId, experimentUser)
   }
 }
