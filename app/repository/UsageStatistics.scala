@@ -36,6 +36,7 @@ class UsageStatistics(implicit context: CoreContext) extends InjectAble {
   var setting_notify_notification_click_counter = 0
   var setting_language_change_usage_counter = 0
   var setting_displayed_language = ""
+  var duration = 0
 
   override val callContext: CoreContext = context
   override val tableName: String = "usage_stat"

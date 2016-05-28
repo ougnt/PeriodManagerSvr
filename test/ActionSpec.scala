@@ -5,7 +5,7 @@ import controllers.Application
 import org.specs2.mock.Mockito
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.{FakeRequest, PlaySpecification}
-import repository.{ExperimentAdsRun, Device, JsonSerializer, UsageStatistics}
+import repository._
 
 import scala.util.Random
 
@@ -117,7 +117,10 @@ class ActionSpec extends PlaySpecification with Mockito with BasedSpec {
       var isCalled = false
       mockDevice.get(any[Seq[(String,String)]]) returns Nil
       mockDevice.insert().answers((any) => {
-        isCalled = true
+        {
+          isCalled = true
+          11
+        }
       })
       Application.overridedInjectables = Seq(mockDevice)
 
@@ -136,6 +139,7 @@ class ActionSpec extends PlaySpecification with Mockito with BasedSpec {
       mockDevice.get(any[Seq[(String,String)]]) returns Seq(new Device)
       mockDevice.insert().answers((any) => {
         isCalled = true
+        0
       })
       Application.overridedInjectables = Seq(mockDevice)
 
@@ -170,6 +174,27 @@ class ActionSpec extends PlaySpecification with Mockito with BasedSpec {
       res._2 mustEqual "Hello"
       res._3 mustEqual 11
       res._4 mustEqual 'a'
+    }
+  }
+
+  """insertDuration""" should {
+
+    """be able to insert all fields""" in {
+
+      // Setup
+      var insertFunctionIsCalled = false
+      val mockDuration = mock[UsageDuration]
+      mockDuration.insert answers( (Any) => {
+        insertFunctionIsCalled = true
+        1
+      })
+      Application.overridedInjectables = Seq(mockDuration)
+
+      // Execute
+      Application.insertDuration(UUID.randomUUID(), new UsageStatistics)
+
+      // Verify
+      insertFunctionIsCalled mustEqual true
     }
   }
 

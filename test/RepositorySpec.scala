@@ -718,6 +718,70 @@ class RepositorySpec extends BasedSpec {
     }
   }
 
+  """UsageDuration""" should {
+
+    """be able to be inserted""" in {
+      // Setup
+      val device = new Device {
+        deviceId = UUID.randomUUID
+        language = "th"
+      }
+      device.insert()
+
+      val testUsageDuration = new UsageDuration {
+        device_id = device.deviceId
+        data_date = "2016-05-30"
+        data_hour = 22
+        duration = 12345678
+      }
+
+      // Execute
+      val insertUsageId = testUsageDuration.insert()
+
+      // Verify
+      val actualUsage = new UsageDuration().get(Seq(("duration_id", insertUsageId toString))).asInstanceOf[Seq[UsageDuration]].head
+      actualUsage must beSameUsageDuration(testUsageDuration)
+    }
+
+    """be able to duplication insert""" in {
+      // Setup
+      val device = new Device {
+        deviceId = UUID.randomUUID
+        language = "th"
+      }
+      device.insert()
+
+      val testUsageDuration = new UsageDuration {
+        device_id = device.deviceId
+        data_date = "2016-05-30"
+        data_hour = 22
+        duration = 12345678
+      }
+
+      // Execute
+      val insertUsageId1 = testUsageDuration.insert()
+      val insertUsageId2 = testUsageDuration.insert()
+
+      // Verify
+      val actualUsage1 = new UsageDuration().get(Seq(("duration_id", insertUsageId1 toString))).asInstanceOf[Seq[UsageDuration]].head
+      val actualUsage2 = new UsageDuration().get(Seq(("duration_id", insertUsageId2 toString))).asInstanceOf[Seq[UsageDuration]].head
+      actualUsage1 must beSameUsageDuration(actualUsage2)
+    }
+
+    """throw exception when the device ID doesn't existing""" in {
+      // Setup
+      val testUsageDuration = new UsageDuration {
+        device_id = UUID.randomUUID
+        data_date = "2016-05-30"
+        data_hour = 22
+        duration = 12345678
+      }
+
+      // Execute
+      testUsageDuration.insert() must throwA[Exception]
+    }
+  }
+
   def beSameDevice(expect: Device): Matcher[Device] = (actual: Device) => (
     expect.deviceId == actual.deviceId &&
     expect.language.equals(actual.language),
@@ -822,6 +886,19 @@ class RepositorySpec extends BasedSpec {
     else if(!expect.fAdsClick.equals(actual.fAdsClick)) "fAdsClick is not equal"
     else "Ads text not matched"
   )
+
+  def beSameUsageDuration(expect: UsageDuration) : Matcher[UsageDuration] = (actual: UsageDuration) => (
+
+    actual.device_id.equals(expect.device_id) &&
+    actual.data_date == expect.data_date &&
+    actual.data_hour == expect.data_hour,
+    "Be same usage duration",
+    if(actual.duration_id == expect.duration_id) "duration_id is difference"
+    else if(actual.device_id.equals(expect.device_id)) "device_id is difference"
+    else if(actual.data_date == expect.data_date) "data_date is difference"
+    else if(actual.data_hour == expect.data_hour) "data_hour is difference"
+    else "unknown error"
+    )
 
   override protected def beforeAll(): Unit = {}
 

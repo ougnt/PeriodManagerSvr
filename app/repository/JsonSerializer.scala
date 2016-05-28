@@ -53,6 +53,11 @@ class JsonSerializerImpl extends JsonSerializer {
           setting_displayed_language = (usageStatJson \ "setting_displayed_language" toString()) replace("\"", "")
           setting_language_change_usage_counter = (usageStatJson \ "setting_language_change_usage_counter" toString()).toInt
         }
+
+        // This field available in version 38
+        if(Integer.parseInt(applicationVersion) >= 38) {
+          duration = (usageStatJson \ "duration" toString()).toInt
+        }
       }
     } catch {
       case e: Exception => return None

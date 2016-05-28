@@ -97,6 +97,8 @@ object Application extends Controller {
 
         updateDailyStat(device, stat.get.applicationVersion)
 
+        insertDuration(device.deviceId, stat.get)
+
         ret = Some(Ok(ResultOkReturnMessage))
       } catch {
 
@@ -157,6 +159,18 @@ object Application extends Controller {
       device.language = language
       device.insert()
     }
+  }
+
+  def insertDuration(deviceId: UUID, stat: UsageStatistics)( implicit context: CoreContext) = {
+
+    val duration = if(overridedInjectables isEmpty) new UsageDuration {
+      device_id = deviceId
+      data_date = stat.recCreatedWhen.toString("yyyy-MM-dd")
+      data_hour = stat.recCreatedWhen.getHourOfDay
+      duration = stat.duration
+    } else overridedInjectables.head
+
+    duration.insert()
   }
 
   def getExperimentRun(deviceId: UUID, language: String)(implicit context: CoreContext): ExperimentAdsRun = {

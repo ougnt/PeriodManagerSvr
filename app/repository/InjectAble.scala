@@ -1,7 +1,7 @@
 package repositories
 
 import java.lang.reflect.Field
-import java.sql.{ResultSet, SQLException}
+import java.sql.{Statement, ResultSet, SQLException}
 import java.util.UUID
 
 import context.CoreContext
@@ -25,7 +25,7 @@ trait InjectAble {
   var recModifiedBy: UUID = null
   var recStatus: Int = 0
 
-  def insert(): Unit ={
+  def insert(): Int ={
 
     if(callContext.connection.isEmpty) {
 
@@ -70,8 +70,17 @@ trait InjectAble {
 
     try {
       val conn = callContext.connection.get
-      val statement = conn.createStatement()
-      val res = statement.executeUpdate(sqlStatement)
+//      val statement = conn.createStatement()
+      val statement = conn.prepareStatement(sqlStatement, Statement.RETURN_GENERATED_KEYS)
+      val res = statement.executeUpdate()
+      val resset = statement.getGeneratedKeys
+
+      resset.next
+      if (resset.getRow == 0)
+        0
+      else {
+        resset.getInt(1)
+      }
     } catch {
       case ex : SQLException => {
         Console.println(ex.getMessage)

@@ -421,3 +421,120 @@ VALUES
 	null,
 	1
 );
+
+-- -------------------------------------------
+-- version 8.0
+-- -------------------------------------------
+
+UPDATE db_info
+SET db_version = 8,
+  `rec_modified_by`= `rec_created_by`,
+  `rec_modified_when` = CURRENT_TIMESTAMP();
+
+UPDATE		experiment_ads_run
+SET				rec_status = 0
+WHERE		rec_status = 1;
+
+INSERT INTO experiment_ads_run
+(
+	experiment_id,
+	displayed_language,
+	a_ads_url,
+	a_ads_text,
+	a_ads_show,
+	a_ads_click,
+	b_ads_url,
+	b_ads_text,
+	b_ads_show,
+	b_ads_click,
+	c_ads_url,
+	c_ads_text,
+	c_ads_show,
+	c_ads_click,
+	d_ads_url,
+	d_ads_text,
+	d_ads_show,
+	d_ads_click,
+	e_ads_url,
+	e_ads_text,
+	e_ads_show,
+	e_ads_click,
+	f_ads_url,
+	f_ads_text,
+	f_ads_show,
+	f_ads_click,
+	rec_created_by,
+	rec_created_when,
+	rec_modified_by,
+	rec_modified_when,
+	rec_status
+)
+VALUES
+(
+	(SELECT experiment_id FROM experiment LIMIT 1),
+	'th',
+	'http://ho.lazada.co.th/SHGDGu?sku=IB365HBAA1TDZ4ANTH&redirect=http%3A%2F%2Fho.lazada.co.th%2FSHGDGs%3Furl%3Dhttp%253A%252F%252Fwww.lazada.co.th%252Fibabi-lh-ovulation-test-strip-3-3050752.html%253Foffer_id%253D%257Boffer_id%257D%2526affiliate_id%253D%257Baffiliate_id%257D%2526offer_name%253D%257Boffer_name%257D_%257Boffer_file_id%257D%2526affiliate_name%253D%257Baffiliate_name%257D%2526transaction_id%253D%257Btransaction_id%257D',
+	N'ส่งฟรี อุปกรณ์ตรวจไข่ตก',
+	0,
+	0,
+	'http://ho.lazada.co.th/SHGDGu?sku=PH250HBAA2CK7SANTH&redirect=http%3A%2F%2Fho.lazada.co.th%2FSHGDGs%3Furl%3Dhttp%253A%252F%252Fwww.lazada.co.th%252Fphecare-3945304.html%253Foffer_id%253D%257Boffer_id%257D%2526affiliate_id%253D%257Baffiliate_id%257D%2526offer_name%253D%257Boffer_name%257D_%257Boffer_file_id%257D%2526affiliate_name%253D%257Baffiliate_name%257D%2526transaction_id%253D%257Btransaction_id%257D&aff_sub=pregnancy_test_cheap',
+	N'ส่งฟรี ชุดทดสอบการตั้งครรภ์แบบจุ่ม',
+	0,
+	0,
+	'http://ho.lazada.co.th/SHGDGu?sku=KL511HBAPQRTANTH&redirect=http%3A%2F%2Fho.lazada.co.th%2FSHGDGs%3Furl%3Dhttp%253A%252F%252Fwww.lazada.co.th%252Fklick-as-3-734537.html%253Foffer_id%253D%257Boffer_id%257D%2526affiliate_id%253D%257Baffiliate_id%257D%2526offer_name%253D%257Boffer_name%257D_%257Boffer_file_id%257D%2526affiliate_name%253D%257Baffiliate_name%257D%2526transaction_id%253D%257Btransaction_id%257D&aff_sub=pregnancy_test_expensive',
+	N'ส่งฟรี ชุดทดสอบการตั้งครรภ์แบบปากกา',
+	0,
+	0,
+	'',
+	N'',
+	0,
+	0,
+	'',
+	N'',
+	0,
+	0,
+	'',
+	N'',
+	0,
+	0,
+	(SELECT user_id FROM users LIMIT 1),
+	'2016-04-22T20:29:47.578+07:00',
+	null,
+	null,
+	1
+);
+
+-- -------------------------------------------
+-- version 9.0
+-- -------------------------------------------
+
+UPDATE db_info
+SET db_version = 9,
+  `rec_modified_by`= `rec_created_by`,
+  `rec_modified_when` = CURRENT_TIMESTAMP();
+
+CREATE TABLE IF NOT EXISTS usage_duration (
+	duration_id	BIGINT	AUTO_INCREMENT PRIMARY KEY,
+	device_id 	VARCHAR(36) NOT NULL,
+	data_date		VARCHAR(10) NOT NULL,
+	data_hour		INT NOT NULL,
+	duration		INT NOT NULL,
+	rec_created_by VARCHAR(36) NOT NULL,
+	rec_created_when VARCHAR(128) NOT NULL,
+	rec_modified_by VARCHAR(36) DEFAULT NULL,
+	rec_modified_when VARCHAR(128) DEFAULT NULL,
+	rec_status INT NOT NULL DEFAULT 0,
+	FOREIGN KEY (device_id) REFERENCES device_info(device_id),
+	FOREIGN KEY (rec_status) REFERENCES rec_status_ref (rec_status_id),
+	FOREIGN KEY (rec_created_by) REFERENCES users(user_id),
+	FOREIGN KEY (rec_modified_by) REFERENCES users(user_id)
+);
+
+ALTER TABLE usage_stat
+ADD COLUMN duration INT NOT NULL AFTER setting_language_change_usage_counter;
+
+CREATE OR REPLACE VIEW usage_duration_vu AS SELECT * FROM usage_duration;
+
+CREATE OR REPLACE VIEW usage_stat_vu AS SELECT * FROM usage_stat;
+
+SHOW ENGINE INNODB STATUS;
