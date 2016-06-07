@@ -167,6 +167,7 @@ object Application extends Controller {
       device_id = deviceId
       data_date = stat.recCreatedWhen.toString("yyyy-MM-dd")
       data_hour = stat.recCreatedWhen.getHourOfDay
+      applicationVersion = stat.applicationVersion
       duration = stat.duration
     } else overridedInjectables.head
 

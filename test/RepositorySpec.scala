@@ -732,6 +732,7 @@ class RepositorySpec extends BasedSpec {
         device_id = device.deviceId
         data_date = "2016-05-30"
         data_hour = 22
+        applicationVersion = "38"
         duration = 12345678
       }
 
@@ -891,12 +892,16 @@ class RepositorySpec extends BasedSpec {
 
     actual.device_id.equals(expect.device_id) &&
     actual.data_date == expect.data_date &&
-    actual.data_hour == expect.data_hour,
+    actual.data_hour == expect.data_hour &&
+    actual.duration == expect.duration &&
+    actual.applicationVersion == expect.applicationVersion,
     "Be same usage duration",
     if(actual.duration_id == expect.duration_id) "duration_id is difference"
     else if(actual.device_id.equals(expect.device_id)) "device_id is difference"
     else if(actual.data_date == expect.data_date) "data_date is difference"
     else if(actual.data_hour == expect.data_hour) "data_hour is difference"
+    else if(actual.duration == expect.duration) "duration is difference"
+    else if(actual.applicationVersion == expect.applicationVersion) "applicationVersion is difference"
     else "unknown error"
     )
 

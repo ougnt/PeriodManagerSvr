@@ -38,6 +38,7 @@ class ApplicationSpec extends BasedSpec with BeforeAfter with Mockito {
       // Setting
       val device = new Device
       device.insert()
+      Application.overridedInjectables = Nil
 
       // Execute
       Application.updateDailyStat(device, "1")
@@ -57,6 +58,7 @@ class ApplicationSpec extends BasedSpec with BeforeAfter with Mockito {
       // Setting
       val device = new Device
       device.insert()
+      Application.overridedInjectables = Nil
 
       // Execute
       Application.updateDailyStat(device, "1")

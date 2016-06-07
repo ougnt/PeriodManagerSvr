@@ -538,3 +538,105 @@ CREATE OR REPLACE VIEW usage_duration_vu AS SELECT * FROM usage_duration;
 CREATE OR REPLACE VIEW usage_stat_vu AS SELECT * FROM usage_stat;
 
 SHOW ENGINE INNODB STATUS;
+
+-- -------------------------------------------
+-- version 10.0
+-- -------------------------------------------
+
+UPDATE db_info
+SET db_version = 10,
+  `rec_modified_by`= `rec_created_by`,
+  `rec_modified_when` = CURRENT_TIMESTAMP();
+
+ALTER TABLE usage_duration
+ADD COLUMN application_version VARCHAR(10) NOT NULL DEFAULT '38' AFTER data_hour;
+
+CREATE OR REPLACE VIEW usage_duration_vu AS SELECT * FROM usage_duration;
+
+SHOW ENGINE INNODB STATUS;
+
+-- -------------------------------------------
+-- version 11.0
+-- -------------------------------------------
+
+UPDATE db_info
+SET db_version = 11,
+  `rec_modified_by`= `rec_created_by`,
+  `rec_modified_when` = CURRENT_TIMESTAMP();
+
+UPDATE		experiment_ads_run
+SET				rec_status = 0
+WHERE		rec_status = 1;
+
+INSERT INTO experiment_ads_run
+(
+	experiment_id,
+	displayed_language,
+	a_ads_url,
+	a_ads_text,
+	a_ads_show,
+	a_ads_click,
+	b_ads_url,
+	b_ads_text,
+	b_ads_show,
+	b_ads_click,
+	c_ads_url,
+	c_ads_text,
+	c_ads_show,
+	c_ads_click,
+	d_ads_url,
+	d_ads_text,
+	d_ads_show,
+	d_ads_click,
+	e_ads_url,
+	e_ads_text,
+	e_ads_show,
+	e_ads_click,
+	f_ads_url,
+	f_ads_text,
+	f_ads_show,
+	f_ads_click,
+	rec_created_by,
+	rec_created_when,
+	rec_modified_by,
+	rec_modified_when,
+	rec_status
+)
+VALUES
+(
+	(SELECT experiment_id FROM experiment LIMIT 1),
+	'th',
+	'',
+	N'',
+	0,
+	0,
+	'',
+	N'',
+	0,
+	0,
+	'',
+	N'',
+	0,
+	0,
+	'',
+	N'',
+	0,
+	0,
+	'',
+	N'',
+	0,
+	0,
+	'',
+	N'',
+	0,
+	0,
+	(SELECT user_id FROM users LIMIT 1),
+	'2016-06-02T20:29:47.578+07:00',
+	null,
+	null,
+	1
+);
+
+
+
+SELECT * FROM experiment_ads_run_vu;
