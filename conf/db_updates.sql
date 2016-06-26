@@ -640,3 +640,20 @@ VALUES
 
 
 SELECT * FROM experiment_ads_run_vu;
+
+
+-- -------------------------------------------
+-- version 12.0
+-- -------------------------------------------
+
+UPDATE db_info
+SET db_version = 12,
+  `rec_modified_by`= `rec_created_by`,
+  `rec_modified_when` = CURRENT_TIMESTAMP();
+
+ALTER TABLE device_info
+ADD COLUMN application_version VARCHAR(10) NOT NULL DEFAULT '0' AFTER language;
+
+CREATE OR REPLACE VIEW device_info_vu AS SELECT * FROM device_info;
+
+SHOW ENGINE INNODB STATUS;

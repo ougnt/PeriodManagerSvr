@@ -28,7 +28,7 @@ object Application extends Controller {
 
     implicit val context: CoreContext = new CoreContext
 
-    insertDeviceIfNotExists(UUID.fromString(deviceId), language)
+    insertDeviceIfNotExists(UUID.fromString(deviceId), language, "0")
 
     val experimentRun = getExperimentRun(UUID.fromString(deviceId), language)
     val randomExp = getRandomExperimentUrl(experimentRun)
@@ -89,6 +89,7 @@ object Application extends Controller {
 
           device.language = stat.get.setting_displayed_language
         }
+        device.applicationVersion = stat.get.applicationVersion
         device.insertOrUpdate(Seq(("device_id",device.deviceId toString)))
 
         stat.get.insertOrUpdate(
@@ -149,7 +150,7 @@ object Application extends Controller {
     dailyUsage.insertOrUpdate(criteria)
   }
 
-  def insertDeviceIfNotExists(deviceId: UUID, language: String)(implicit context: CoreContext): Unit = {
+  def insertDeviceIfNotExists(deviceId: UUID, language: String, applicationVersion: String)(implicit context: CoreContext): Unit = {
 
     val device = if(overridedInjectables.isEmpty) new Device() else overridedInjectables.head.asInstanceOf[Device]
     if (device.get(Seq(("device_id", deviceId.toString))).isEmpty) {
@@ -157,6 +158,7 @@ object Application extends Controller {
       device.deviceId = deviceId
       device.recStatus = 1
       device.language = language
+      device.applicationVersion = applicationVersion
       device.insert()
     }
   }

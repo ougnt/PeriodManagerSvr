@@ -125,7 +125,7 @@ class ActionSpec extends PlaySpecification with Mockito with BasedSpec {
       Application.overridedInjectables = Seq(mockDevice)
 
       // Execute
-      Application.insertDeviceIfNotExists(UUID.randomUUID(), "ss")
+      Application.insertDeviceIfNotExists(UUID.randomUUID(), "ss", "10")
 
       // Verify
       isCalled mustEqual true
@@ -144,7 +144,7 @@ class ActionSpec extends PlaySpecification with Mockito with BasedSpec {
       Application.overridedInjectables = Seq(mockDevice)
 
       // Execute
-      Application.insertDeviceIfNotExists(UUID.randomUUID(), "ss")
+      Application.insertDeviceIfNotExists(UUID.randomUUID(), "ss", "10")
 
       // Verify
       isCalled mustEqual false

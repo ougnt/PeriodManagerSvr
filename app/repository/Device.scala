@@ -13,6 +13,7 @@ class Device(implicit context: CoreContext) extends InjectAble {
 
   var deviceId: UUID = UUID.randomUUID()
   var language: String = ""
+  var applicationVersion = "0"
 
   override val callContext: CoreContext = context
   override val tableName: String = "device_info"
