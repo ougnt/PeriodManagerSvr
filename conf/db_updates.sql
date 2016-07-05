@@ -735,3 +735,17 @@ CREATE OR REPLACE VIEW users_vu AS (SELECT * FROM users);
 
 SHOW ENGINE INNODB STATUS;
 
+-- latest change
+-- -------------------------------------------
+-- version16.0
+-- -------------------------------------------
+
+UPDATE db_info
+SET db_version = 16,
+  `rec_modified_by`= `rec_created_by`,
+  `rec_modified_when` = CURRENT_TIMESTAMP();
+
+ALTER TABLE user_info
+ADD CONSTRAINT UNIQUE(user_email);
+
+SHOW ENGINE INNODB STATUS;

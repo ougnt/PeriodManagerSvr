@@ -1,11 +1,13 @@
 package controllers
 
+import java.sql.SQLException
+
 import com.fasterxml.jackson.core.JsonParseException
 import context.CoreContext
 import data.{RsaDecoder, RsaHelper}
 import play.api.libs.json.{JsValue, JsObject, Json}
 import play.api.mvc._
-import repository.{UserInfo, RsaRepository}
+import repository.{User, UserInfo, RsaRepository}
 
 /**
   * * # Created by wacharint on 7/1/16.
@@ -13,6 +15,8 @@ import repository.{UserInfo, RsaRepository}
 object LoginApi extends Controller {
 
   val LoginFailMessage = "Login Failed"
+  val RegisterFailMessage = "Register Failed"
+  val EmailExisting = "Email Existing"
   var OverrideContext: Option[CoreContext] = None
 
   def handShake = Action {
@@ -95,4 +99,99 @@ object LoginApi extends Controller {
     }
   }}
 
+  def register(id: String) = Action{ request: Request[AnyContent] => {
+
+    implicit val coreContext: CoreContext = if(OverrideContext.isEmpty) new CoreContext else OverrideContext.get
+    var registerIsFail = false
+
+    val rsaData = new RsaRepository().get(Seq(("rsa_uuid", id))).headOption.asInstanceOf[Option[RsaRepository]]
+
+    if(rsaData.isEmpty) {
+
+      Ok(RegisterFailMessage)
+    } else {
+
+      val decoder = new RsaDecoder(BigInt(rsaData.get.d, 36), BigInt(rsaData.get.n, 36))
+      val payload = request.body.asText
+
+      if(payload.isEmpty) {
+
+        Ok(RegisterFailMessage)
+      } else {
+
+        var reqText = ""
+        try {
+          reqText = decoder.decrypt(request.body.asText.get)
+        } catch {
+
+          case e: NumberFormatException => registerIsFail = true
+        }
+
+        if(registerIsFail) {
+          Ok(RegisterFailMessage)
+        } else {
+
+          var reqJson: JsValue = null
+
+          try {
+
+            reqJson = Json.parse(reqText)
+          } catch {
+            case e: JsonParseException => registerIsFail = true
+            case e: java.lang.Exception => registerIsFail = true
+          }
+
+          if(registerIsFail) {
+
+            Ok(RegisterFailMessage)
+          } else {
+
+            var email = reqJson.asInstanceOf[JsObject].value.find( p => p._1.equalsIgnoreCase("email")).getOrElse("" -> "\"\"")._2.toString
+            var passwd = reqJson.asInstanceOf[JsObject].value.find( p => p._1.equalsIgnoreCase("password")).getOrElse("" -> "\"\"")._2.toString
+
+            email = email.substring(1, email.length -1)
+            passwd = passwd.substring(1, passwd.length -1)
+
+            if(new UserInfo().get(Seq("user_email" -> email)).size > 0) {
+
+              Ok(EmailExisting)
+            } else if(email.length < 3 || passwd.length < 3) {
+
+              Ok(RegisterFailMessage)
+            } else {
+
+              val newUser = new User() {
+                descr = "Registered user"
+              }
+              val newUserInfo = new UserInfo() {
+
+                userId = newUser.userId
+                userEmail = email
+                password = passwd
+              }
+
+              try {
+
+                newUser.insert()
+                newUserInfo.insert()
+              } catch {
+                case e: SQLException => {
+                  val msg = e.getMessage()
+                  registerIsFail = true
+                }
+              }
+
+              if(registerIsFail) {
+
+                Ok(RegisterFailMessage)
+              } else {
+
+                Ok(newUserInfo.userToken.toString)
+              }
+            }
+          }
+        }
+      }
+    }
+  } }
 }
