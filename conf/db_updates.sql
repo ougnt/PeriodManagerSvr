@@ -657,3 +657,81 @@ ADD COLUMN application_version VARCHAR(10) NOT NULL DEFAULT '0' AFTER language;
 CREATE OR REPLACE VIEW device_info_vu AS SELECT * FROM device_info;
 
 SHOW ENGINE INNODB STATUS;
+
+-- -------------------------------------------
+ -- version 13.0
+ -- -------------------------------------------
+
+ UPDATE db_info
+ SET db_version = 13,
+   `rec_modified_by`= `rec_created_by`,
+   `rec_modified_when` = CURRENT_TIMESTAMP();
+
+ CREATE TABLE IF NOT EXISTS rsa_data(
+     rsa_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+     rsa_uuid VARCHAR(36) NOT NULL,
+     e VARCHAR(70) NOT NULL,
+     d VARCHAR(70) NOT NULL,
+     n VARCHAR(70) NOT NULL,
+     rec_created_by VARCHAR(36) NOT NULL,
+  	rec_created_when VARCHAR(128) NOT NULL,
+ 	rec_modified_by VARCHAR(36),
+ 	rec_modified_when VARCHAR(128),
+ 	rec_status INT NOT NULL,
+ 	FOREIGN KEY (rec_created_by) REFERENCES users(user_id),
+ 	FOREIGN KEY (rec_modified_by) REFERENCES users(user_id)
+ );
+
+ CREATE OR REPLACE VIEW rsa_data_vu AS SELECT * FROM rsa_data;
+
+ SHOW ENGINE INNODB STATUS;
+
+-- -------------------------------------------
+ -- version 14.0
+ -- -------------------------------------------
+
+ UPDATE db_info
+ SET db_version = 14,
+   `rec_modified_by`= `rec_created_by`,
+   `rec_modified_when` = CURRENT_TIMESTAMP();
+
+ CREATE TABLE IF NOT EXISTS user_info(
+     user_info_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+     user_id VARCHAR(36) NOT NULL,
+     user_token VARCHAR(36) NOT NULL,
+     user_email VARCHAR(70) NOT NULL,
+     password VARCHAR(70) NOT NULL,
+     rec_created_by VARCHAR(36) NOT NULL,
+  	rec_created_when VARCHAR(128) NOT NULL,
+ 	rec_modified_by VARCHAR(36),
+ 	rec_modified_when VARCHAR(128),
+ 	rec_status INT NOT NULL,
+ 	FOREIGN KEY (rec_created_by) REFERENCES users(user_id),
+ 	FOREIGN KEY (rec_modified_by) REFERENCES users(user_id),
+ 	FOREIGN KEY (user_id) REFERENCES users(user_id)
+ );
+
+ CREATE OR REPLACE VIEW user_info_vu AS SELECT * FROM user_info;
+
+ SHOW ENGINE INNODB STATUS;
+
+-- -------------------------------------------
+-- version15.0
+-- -------------------------------------------
+
+UPDATE db_info
+SET db_version = 15,
+  `rec_modified_by`= `rec_created_by`,
+  `rec_modified_when` = CURRENT_TIMESTAMP();
+
+ALTER TABLE users
+ADD COLUMN rec_created_by VARCHAR(36) NOT NULL,
+ADD COLUMN 	rec_created_when VARCHAR(128) NOT NULL,
+ADD COLUMN 	rec_modified_by VARCHAR(36),
+ADD COLUMN 	rec_modified_when VARCHAR(128),
+ADD COLUMN 	rec_status INT NOT NULL;
+
+CREATE OR REPLACE VIEW users_vu AS (SELECT * FROM users);
+
+SHOW ENGINE INNODB STATUS;
+

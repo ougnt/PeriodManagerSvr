@@ -9,7 +9,7 @@ class RsaDecoder(val d: BigInt, val n: BigInt) {
 
     var results = ""
     message.split("""\|""").foreach(c =>
-      results = results + decryptToChar(BigInt(c, 16))
+      results = results + decryptToChar(BigInt(c, 36))
     )
     results = results.substring(0, results.size)
     results

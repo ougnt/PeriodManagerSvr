@@ -1,4 +1,7 @@
-import controllers.Application
+import java.util.UUID
+
+import controllers.{LoginApi, Application}
+import data.RsaEncoder
 import org.joda.time.DateTime
 import org.junit.runner._
 import org.specs2.mock.Mockito
@@ -6,7 +9,7 @@ import org.specs2.mutable.BeforeAfter
 import org.specs2.runner._
 import play.api.test.Helpers._
 import play.api.test._
-import repository.{DailyUsage, Device}
+import repository.{User, UserInfo, DailyUsage, Device}
 
 /**
  * Add your spec here.
@@ -72,6 +75,173 @@ class ApplicationSpec extends BasedSpec with BeforeAfter with Mockito {
       retUsage.size mustEqual 1
       retUsage.head.asInstanceOf[DailyUsage].usageCounter mustEqual 2
       retUsage.head.asInstanceOf[DailyUsage].dataHour mustEqual DateTime.now.hourOfDay.get
+    }
+  }
+
+  """Application Login""" should {
+
+    """return the user token when login success""" in {
+
+      // setup
+      LoginApi.OverrideContext = Some(context)
+      val user = new User {
+        descr = "temp user"
+      }
+
+      user.insert()
+
+      val userInfo = new UserInfo() {
+
+        userId = user.userId
+        userToken = UUID.randomUUID
+        userEmail = "temp@testmua.com"
+        password = "abcdefgh"
+      }
+      userInfo.insert
+
+      val handShakeRet = LoginApi.handShake(FakeRequest(GET, "/handshake").withHeaders("Content-Type" -> "Application/Json"))
+
+      val handShakeJson = contentAsJson(handShakeRet)
+      val id = (handShakeJson \ "id" toString).stripPrefix("\"").stripSuffix("\"")
+      val e = (handShakeJson \ "e" toString).stripPrefix("\"").stripSuffix("\"")
+      val n = (handShakeJson \ "n" toString).stripPrefix("\"").stripSuffix("\"")
+      val encryptor = new RsaEncoder(BigInt(e, 36), BigInt(n, 36))
+      val encryptedMsg = encryptor.encrypt("""{"userName":"%s","password":"%s"}""".format(userInfo.userEmail, userInfo.password))
+
+      // execute
+      val loginRet = LoginApi.login(id)(FakeRequest(POST, "/login").
+        withHeaders("Content-Type" -> "text/plain").
+        withTextBody(encryptedMsg))
+
+      // verify
+      val loginResult = contentAsString(loginRet)
+      loginResult mustEqual userInfo.userToken.toString
+    }
+
+    """return login fail message when the username is not exist""" in {
+
+      // setup
+      val handShakeRet = LoginApi.handShake(FakeRequest(GET, "/handshake").withHeaders("Content-Type" -> "Application/Json"))
+
+      val handShakeJson = contentAsJson(handShakeRet)
+      val id = (handShakeJson \ "id" toString).stripPrefix("\"").stripSuffix("\"")
+      val e = (handShakeJson \ "e" toString).stripPrefix("\"").stripSuffix("\"")
+      val n = (handShakeJson \ "n" toString).stripPrefix("\"").stripSuffix("\"")
+      val encryptor = new RsaEncoder(BigInt(e, 36), BigInt(n, 36))
+      val encryptedMsg = encryptor.encrypt("""{"userName":"%s","password":"%s"}""".format("Notexisting@fake.com", ""))
+
+      // execute
+      val loginRet = LoginApi.login(id)(FakeRequest(POST, "/login").
+        withHeaders("Content-Type" -> "text/plain").
+        withTextBody(encryptedMsg))
+
+      // verify
+      val loginResult = contentAsString(loginRet)
+      loginResult mustEqual LoginApi.LoginFailMessage
+    }
+
+    """return login fail message when the password is not matched""" in {
+
+      // setup
+      LoginApi.OverrideContext = Some(context)
+      val user = new User {
+        descr = "temp user"
+      }
+
+      user.insert()
+
+      val userInfo = new UserInfo() {
+
+        userId = user.userId
+        userToken = UUID.randomUUID
+        userEmail = "temp@testmua.com"
+        password = "abcdefgh"
+      }
+      userInfo.insert
+
+      val handShakeRet = LoginApi.handShake(FakeRequest(GET, "/handshake").withHeaders("Content-Type" -> "Application/Json"))
+
+      val handShakeJson = contentAsJson(handShakeRet)
+      val id = (handShakeJson \ "id" toString).stripPrefix("\"").stripSuffix("\"")
+      val e = (handShakeJson \ "e" toString).stripPrefix("\"").stripSuffix("\"")
+      val n = (handShakeJson \ "n" toString).stripPrefix("\"").stripSuffix("\"")
+      val encryptor = new RsaEncoder(BigInt(e, 36), BigInt(n, 36))
+      val encryptedMsg = encryptor.encrypt("""{"userName":"%s","password":"%s"}""".format(userInfo.userEmail, "ddd"))
+
+      // execute
+      val loginRet = LoginApi.login(id)(FakeRequest(POST, "/login").
+        withHeaders("Content-Type" -> "text/plain").
+        withTextBody(encryptedMsg))
+
+      // verify
+      val loginResult = contentAsString(loginRet)
+      loginResult mustEqual LoginApi.LoginFailMessage
+    }
+
+    """return login fail message when incorrect encrypt key""" in {
+
+      // setup
+      val handShakeRet = LoginApi.handShake(FakeRequest(GET, "/handshake").withHeaders("Content-Type" -> "Application/Json"))
+
+      val handShakeJson = contentAsJson(handShakeRet)
+      val id = (handShakeJson \ "id" toString).stripPrefix("\"").stripSuffix("\"")
+      val e = (handShakeJson \ "e" toString).stripPrefix("\"").stripSuffix("\"")
+      val n = (handShakeJson \ "n" toString).stripPrefix("\"").stripSuffix("\"")
+      val encryptor = new RsaEncoder(BigInt(e, 36), BigInt(n, 36))
+      val encryptedMsg = encryptor.encrypt("""{"userName":"%s","password":"%s"}""".format("Notexisting@fake.com", ""))
+
+      // execute
+      val loginRet = LoginApi.login(UUID.randomUUID().toString)(FakeRequest(POST, "/login").
+        withHeaders("Content-Type" -> "text/plain").
+        withTextBody(encryptedMsg))
+
+      // verify
+      val loginResult = contentAsString(loginRet)
+      loginResult mustEqual LoginApi.LoginFailMessage
+    }
+
+    """return login fail message when incorrect form of json payload""" in {
+
+      // setup
+      val handShakeRet = LoginApi.handShake(FakeRequest(GET, "/handshake").withHeaders("Content-Type" -> "Application/Json"))
+
+      val handShakeJson = contentAsJson(handShakeRet)
+      val id = (handShakeJson \ "id" toString).stripPrefix("\"").stripSuffix("\"")
+      val e = (handShakeJson \ "e" toString).stripPrefix("\"").stripSuffix("\"")
+      val n = (handShakeJson \ "n" toString).stripPrefix("\"").stripSuffix("\"")
+      val encryptor = new RsaEncoder(BigInt(e, 36), BigInt(n, 36))
+      val encryptedMsg = encryptor.encrypt("""{"user Name":"%s","pass word":"%s"}""".format("Notexisting@fake.com", ""))
+
+      // execute
+      val loginRet = LoginApi.login(id)(FakeRequest(POST, "/login").
+        withHeaders("Content-Type" -> "text/plain").
+        withTextBody(encryptedMsg))
+
+      // verify
+      val loginResult = contentAsString(loginRet)
+      loginResult mustEqual LoginApi.LoginFailMessage
+    }
+
+    """return login fail message when payload is not json""" in {
+
+      // setup
+      val handShakeRet = LoginApi.handShake(FakeRequest(GET, "/handshake").withHeaders("Content-Type" -> "Application/Json"))
+
+      val handShakeJson = contentAsJson(handShakeRet)
+      val id = (handShakeJson \ "id" toString).stripPrefix("\"").stripSuffix("\"")
+      val e = (handShakeJson \ "e" toString).stripPrefix("\"").stripSuffix("\"")
+      val n = (handShakeJson \ "n" toString).stripPrefix("\"").stripSuffix("\"")
+      val encryptor = new RsaEncoder(BigInt(e, 36), BigInt(n, 36))
+      val encryptedMsg = encryptor.encrypt("""userName|%s|password"%s|""".format("Notexisting@fake.com", ""))
+
+      // execute
+      val loginRet = LoginApi.login(id)(FakeRequest(POST, "/login").
+        withHeaders("Content-Type" -> "text/plain").
+        withTextBody(encryptedMsg))
+
+      // verify
+      val loginResult = contentAsString(loginRet)
+      loginResult mustEqual LoginApi.LoginFailMessage
     }
   }
 

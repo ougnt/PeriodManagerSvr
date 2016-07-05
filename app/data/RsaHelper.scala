@@ -10,8 +10,8 @@ class RsaHelper(pComponent: BigInt, qComponent: BigInt, eComponent: BigInt) {
   def this() = this(null,null,null)
 
   val rand = new Random
-  val p: BigInt = if(pComponent == null) BigInt.probablePrime(20, rand) else pComponent
-  val q: BigInt = if(qComponent == null) BigInt.probablePrime(20, rand) else qComponent
+  val p: BigInt = if(pComponent == null) BigInt.probablePrime(64, rand) else pComponent
+  val q: BigInt = if(qComponent == null) BigInt.probablePrime(64, rand) else qComponent
   val n: BigInt = p * q
   val phiN: BigInt = (p - 1) * (q - 1)
   val e: BigInt = if(eComponent == null) {

@@ -8,7 +8,7 @@ class RsaEncoder(val e: BigInt, val n: BigInt) {
   def encrypt(message: String): String = {
 
     var results = ""
-    message.foreach(c => results = results + encrypt(c).toString(16) + "|")
+    message.foreach(c => results = results + encrypt(c).toString(36) + "|")
     results = results.substring(0, results.size - 1)
     results
   }
