@@ -197,7 +197,7 @@ class ApplicationSpec extends BasedSpec with BeforeAfter with Mockito {
 
       // verify
       val loginResult = contentAsString(loginRet)
-      loginResult mustEqual LoginApi.LoginFailMessage
+      loginResult mustEqual LoginApi.BadRequestMessage
     }
 
     """return login fail message when incorrect form of json payload""" in {
@@ -293,7 +293,7 @@ class ApplicationSpec extends BasedSpec with BeforeAfter with Mockito {
 
       // verify
       val registerResult = contentAsString(registerRet)
-      registerResult mustEqual LoginApi.RegisterFailMessage
+      registerResult mustEqual LoginApi.BadRequestMessage
     }
 
     """return the register fail when invalid json""" in {
@@ -355,7 +355,7 @@ class ApplicationSpec extends BasedSpec with BeforeAfter with Mockito {
 
       // verify
       val registerResult = contentAsString(registerRet)
-      registerResult mustEqual LoginApi.EmailExisting
+      registerResult mustEqual LoginApi.EmailExistingMessage
     }
   }
 

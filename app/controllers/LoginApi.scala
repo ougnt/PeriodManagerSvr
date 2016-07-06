@@ -16,7 +16,9 @@ object LoginApi extends Controller {
 
   val LoginFailMessage = "Login Failed"
   val RegisterFailMessage = "Register Failed"
-  val EmailExisting = "Email Existing"
+  val EmailExistingMessage = "Email Existing"
+  val BadRequestMessage = "Bad Request"
+  val OkMessage = "Ok"
   var OverrideContext: Option[CoreContext] = None
 
   def handShake = Action {
@@ -43,57 +45,36 @@ object LoginApi extends Controller {
 
     implicit val coreContext: CoreContext = if(OverrideContext.isEmpty) new CoreContext else OverrideContext.get
 
-    val rsaData = new RsaRepository().get(Seq(("rsa_uuid", id))).headOption.asInstanceOf[Option[RsaRepository]]
+    val decryptedMg = decryptMsg(id, request)
     var loginIsFail = false
 
-    if(rsaData.isEmpty) {
-      Ok(LoginFailMessage)
+    if(decryptedMg.equals(BadRequestMessage) ){
+      Ok(BadRequestMessage)
     } else {
 
-      val decoder = new RsaDecoder(BigInt(rsaData.get.d, 36), BigInt(rsaData.get.n, 36))
-      val textBody = request.body.asText
+      var jsValue: JsValue = null
 
-      if(textBody.isEmpty) {
+      try {
+        jsValue = Json.parse(decryptedMg)
+      } catch {
+        case e: JsonParseException => loginIsFail = true
+      }
+
+      if(loginIsFail) {
         Ok(LoginFailMessage)
       } else {
 
-        var decryptedMsg = ""
+        var userName = jsValue.asInstanceOf[JsObject].value.find(p => p._1.equalsIgnoreCase("userName")).getOrElse("" -> "\"\"")._2.toString
+        var password = jsValue.asInstanceOf[JsObject].value.find(p => p._1.equalsIgnoreCase("password")).getOrElse("" -> "\"\"")._2.toString
+        userName = userName.substring(1, userName.length - 1)
+        password = password.substring(1, password.length - 1)
 
-        try {
-          decryptedMsg = decoder.decrypt(textBody.get)
-        } catch {
-          case e: NumberFormatException => loginIsFail = true
-        }
+        val userInfo = new UserInfo().get(Seq(("user_email", userName), ("password", password))).headOption.asInstanceOf[Option[UserInfo]]
 
-        if(loginIsFail) {
+        if (userInfo.isEmpty) {
           Ok(LoginFailMessage)
         } else {
-
-          var jsValue: JsValue = null
-
-          try {
-            jsValue = Json.parse(decryptedMsg)
-          } catch {
-            case e: JsonParseException => loginIsFail = true
-          }
-
-          if(loginIsFail) {
-            Ok(LoginFailMessage)
-          } else {
-
-            var userName = jsValue.asInstanceOf[JsObject].value.find(p => p._1.equalsIgnoreCase("userName")).getOrElse("" -> "\"\"")._2.toString
-            var password = jsValue.asInstanceOf[JsObject].value.find(p => p._1.equalsIgnoreCase("password")).getOrElse("" -> "\"\"")._2.toString
-            userName = userName.substring(1, userName.length - 1)
-            password = password.substring(1, password.length - 1)
-
-            val userInfo = new UserInfo().get(Seq(("user_email", userName), ("password", password))).headOption.asInstanceOf[Option[UserInfo]]
-
-            if (userInfo.isEmpty) {
-              Ok(LoginFailMessage)
-            } else {
-              Ok(userInfo.head.userToken.toString)
-            }
-          }
+          Ok(userInfo.head.userToken.toString)
         }
       }
     }
@@ -104,41 +85,59 @@ object LoginApi extends Controller {
     implicit val coreContext: CoreContext = if(OverrideContext.isEmpty) new CoreContext else OverrideContext.get
     var registerIsFail = false
 
-    val rsaData = new RsaRepository().get(Seq(("rsa_uuid", id))).headOption.asInstanceOf[Option[RsaRepository]]
-
-    if(rsaData.isEmpty) {
-
-      Ok(RegisterFailMessage)
+    val decryptedMsg = decryptMsg(id, request)
+    if(decryptedMsg.equals(BadRequestMessage)) {
+      Ok(BadRequestMessage)
     } else {
 
-      val decoder = new RsaDecoder(BigInt(rsaData.get.d, 36), BigInt(rsaData.get.n, 36))
-      val payload = request.body.asText
+      var reqJson: JsValue = null
 
-      if(payload.isEmpty) {
+      try {
+
+        reqJson = Json.parse(decryptedMsg)
+      } catch {
+        case e: JsonParseException => registerIsFail = true
+        case e: java.lang.Exception => registerIsFail = true
+      }
+
+      if(registerIsFail) {
 
         Ok(RegisterFailMessage)
       } else {
 
-        var reqText = ""
-        try {
-          reqText = decoder.decrypt(request.body.asText.get)
-        } catch {
+        var email = reqJson.asInstanceOf[JsObject].value.find( p => p._1.equalsIgnoreCase("email")).getOrElse("" -> "\"\"")._2.toString
+        var passwd = reqJson.asInstanceOf[JsObject].value.find( p => p._1.equalsIgnoreCase("password")).getOrElse("" -> "\"\"")._2.toString
 
-          case e: NumberFormatException => registerIsFail = true
-        }
+        email = email.substring(1, email.length -1)
+        passwd = passwd.substring(1, passwd.length -1)
 
-        if(registerIsFail) {
+        if(new UserInfo().get(Seq("user_email" -> email)).size > 0) {
+
+          Ok(EmailExistingMessage)
+        } else if(email.length < 3 || passwd.length < 3) {
+
           Ok(RegisterFailMessage)
         } else {
 
-          var reqJson: JsValue = null
+          val newUser = new User() {
+            descr = "Registered user"
+          }
+          val newUserInfo = new UserInfo() {
+
+            userId = newUser.userId
+            userEmail = email
+            password = passwd
+          }
 
           try {
 
-            reqJson = Json.parse(reqText)
+            newUser.insert()
+            newUserInfo.insert()
           } catch {
-            case e: JsonParseException => registerIsFail = true
-            case e: java.lang.Exception => registerIsFail = true
+            case e: SQLException => {
+              val msg = e.getMessage()
+              registerIsFail = true
+            }
           }
 
           if(registerIsFail) {
@@ -146,52 +145,43 @@ object LoginApi extends Controller {
             Ok(RegisterFailMessage)
           } else {
 
-            var email = reqJson.asInstanceOf[JsObject].value.find( p => p._1.equalsIgnoreCase("email")).getOrElse("" -> "\"\"")._2.toString
-            var passwd = reqJson.asInstanceOf[JsObject].value.find( p => p._1.equalsIgnoreCase("password")).getOrElse("" -> "\"\"")._2.toString
-
-            email = email.substring(1, email.length -1)
-            passwd = passwd.substring(1, passwd.length -1)
-
-            if(new UserInfo().get(Seq("user_email" -> email)).size > 0) {
-
-              Ok(EmailExisting)
-            } else if(email.length < 3 || passwd.length < 3) {
-
-              Ok(RegisterFailMessage)
-            } else {
-
-              val newUser = new User() {
-                descr = "Registered user"
-              }
-              val newUserInfo = new UserInfo() {
-
-                userId = newUser.userId
-                userEmail = email
-                password = passwd
-              }
-
-              try {
-
-                newUser.insert()
-                newUserInfo.insert()
-              } catch {
-                case e: SQLException => {
-                  val msg = e.getMessage()
-                  registerIsFail = true
-                }
-              }
-
-              if(registerIsFail) {
-
-                Ok(RegisterFailMessage)
-              } else {
-
-                Ok(newUserInfo.userToken.toString)
-              }
-            }
+            Ok(newUserInfo.userToken.toString)
           }
         }
       }
     }
   } }
+
+  def decryptMsg(id: String, request: Request[AnyContent])(implicit coreContext: CoreContext): String = {
+
+    val rsaData = new RsaRepository().get(Seq(("rsa_uuid", id))).headOption.asInstanceOf[Option[RsaRepository]]
+    var decryptFail = false
+
+    if (rsaData.isEmpty) {
+      BadRequestMessage
+    } else {
+
+      val decoder = new RsaDecoder(BigInt(rsaData.get.d, 36), BigInt(rsaData.get.n, 36))
+      val textBody = request.body.asText
+
+      if (textBody.isEmpty) {
+        BadRequestMessage
+      } else {
+
+        var decryptedMsg = ""
+
+        try {
+          decryptedMsg = decoder.decrypt(textBody.get)
+        } catch {
+          case e: NumberFormatException => decryptFail = true
+        }
+
+        if(decryptFail) {
+          BadRequestMessage
+        } else {
+          decryptedMsg
+        }
+      }
+    }
+  }
 }
