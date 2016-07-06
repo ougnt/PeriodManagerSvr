@@ -9,7 +9,10 @@ class RsaEncoder(val e: BigInt, val n: BigInt) {
 
     var results = ""
     message.foreach(c => results = results + encrypt(c).toString(36) + "|")
-    results = results.substring(0, results.size - 1)
+
+    if(results.size > 0) {
+      results = results.substring(0, results.size - 1)
+    }
     results
   }
 

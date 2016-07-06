@@ -95,7 +95,7 @@ class ApplicationSpec extends BasedSpec with BeforeAfter with Mockito {
         userId = user.userId
         userToken = UUID.randomUUID
         userEmail = "temp@testmua.com"
-        password = "abcdefgh"
+        password = LoginApi.encoder.encrypt("1234567890abcdef")
       }
       userInfo.insert
 
@@ -106,7 +106,7 @@ class ApplicationSpec extends BasedSpec with BeforeAfter with Mockito {
       val e = (handShakeJson \ "e" toString).stripPrefix("\"").stripSuffix("\"")
       val n = (handShakeJson \ "n" toString).stripPrefix("\"").stripSuffix("\"")
       val encryptor = new RsaEncoder(BigInt(e, 36), BigInt(n, 36))
-      val encryptedMsg = encryptor.encrypt("""{"userName":"%s","password":"%s"}""".format(userInfo.userEmail, userInfo.password))
+      val encryptedMsg = encryptor.encrypt("""{"userName":"%s","password":"%s"}""".format(userInfo.userEmail, "1234567890abcdef"))
 
       // execute
       val loginRet = LoginApi.login(id)(FakeRequest(POST, "/login").
@@ -128,7 +128,7 @@ class ApplicationSpec extends BasedSpec with BeforeAfter with Mockito {
       val e = (handShakeJson \ "e" toString).stripPrefix("\"").stripSuffix("\"")
       val n = (handShakeJson \ "n" toString).stripPrefix("\"").stripSuffix("\"")
       val encryptor = new RsaEncoder(BigInt(e, 36), BigInt(n, 36))
-      val encryptedMsg = encryptor.encrypt("""{"userName":"%s","password":"%s"}""".format("Notexisting@fake.com", ""))
+      val encryptedMsg = encryptor.encrypt("""{"userName":"%s","password":"%s"}""".format("Notexisting@fake.com", "pofgs"))
 
       // execute
       val loginRet = LoginApi.login(id)(FakeRequest(POST, "/login").
@@ -210,7 +210,7 @@ class ApplicationSpec extends BasedSpec with BeforeAfter with Mockito {
       val e = (handShakeJson \ "e" toString).stripPrefix("\"").stripSuffix("\"")
       val n = (handShakeJson \ "n" toString).stripPrefix("\"").stripSuffix("\"")
       val encryptor = new RsaEncoder(BigInt(e, 36), BigInt(n, 36))
-      val encryptedMsg = encryptor.encrypt("""{"user Name":"%s","pass word":"%s"}""".format("Notexisting@fake.com", ""))
+      val encryptedMsg = encryptor.encrypt("""{"user Name":"%s","pass word":"%s"}""".format("Notexisting@fake.com", "abcded"))
 
       // execute
       val loginRet = LoginApi.login(id)(FakeRequest(POST, "/login").
@@ -259,7 +259,7 @@ class ApplicationSpec extends BasedSpec with BeforeAfter with Mockito {
       val e = (handShakeJson \ "e" toString).stripPrefix("\"").stripSuffix("\"")
       val n = (handShakeJson \ "n" toString).stripPrefix("\"").stripSuffix("\"")
       val encryptor = new RsaEncoder(BigInt(e, 36), BigInt(n, 36))
-      val encryptedMsg = encryptor.encrypt("""{"email":"%s","password":"%s"}""".format("email@email.com", "password"))
+      val encryptedMsg = encryptor.encrypt("""{"email":"%s","password":"%s"}""".format("email@email.com", "1234567890abcdef"))
 
       // execute
       val registerRet = LoginApi.register(id)(FakeRequest(POST, "/register").
@@ -268,7 +268,8 @@ class ApplicationSpec extends BasedSpec with BeforeAfter with Mockito {
 
       // verify
       val registerResult = contentAsString(registerRet)
-      val expectedRegisteredUser = new UserInfo().get(Seq("user_email" -> "email@email.com", "password" -> "password"))
+      val expectedRegisteredUser = new UserInfo().get(
+        Seq("user_email" -> "email@email.com", "password" -> LoginApi.encoder.encrypt("1234567890abcdef")))
       expectedRegisteredUser.size mustEqual 1
     }
 

@@ -749,3 +749,33 @@ ALTER TABLE user_info
 ADD CONSTRAINT UNIQUE(user_email);
 
 SHOW ENGINE INNODB STATUS;
+
+-- -------------------------------------------
+-- version17.0
+-- -------------------------------------------
+
+UPDATE db_info
+SET db_version = 17,
+  `rec_modified_by`= `rec_created_by`,
+  `rec_modified_when` = CURRENT_TIMESTAMP();
+
+INSERT INTO rsa_data VALUES
+(
+	0,
+	'6338cd4e-431d-11e6-beb8-9e71128cae77',
+	'nz',
+	'ad8cemekse6eh1hrkp8j39kvb',
+	'aq7k03xk4ouvzsrktw2lasctp',
+	'a9998ce6-da2d-11e5-b5d2-0a1d41d68578',
+	CURRENT_TIMESTAMP(),
+	NULL,
+	NULL,
+	1
+);
+
+ALTER TABLE user_info
+MODIFY password VARCHAR(450) NOT NULL;
+
+CREATE OR REPLACE VIEW user_info_vu as (SELECT * FROM user_info);
+
+SHOW ENGINE INNODB STATUS;

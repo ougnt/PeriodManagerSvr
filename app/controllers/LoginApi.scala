@@ -4,7 +4,7 @@ import java.sql.SQLException
 
 import com.fasterxml.jackson.core.JsonParseException
 import context.CoreContext
-import data.{RsaDecoder, RsaHelper}
+import data.{RsaEncoder, RsaDecoder, RsaHelper}
 import play.api.libs.json.{JsValue, JsObject, Json}
 import play.api.mvc._
 import repository.{User, UserInfo, RsaRepository}
@@ -20,6 +20,8 @@ object LoginApi extends Controller {
   val BadRequestMessage = "Bad Request"
   val OkMessage = "Ok"
   var OverrideContext: Option[CoreContext] = None
+
+  val encoder = new RsaEncoder(BigInt("nz", 36), BigInt("aq7k03xk4ouvzsrktw2lasctp", 36))
 
   def handShake = Action {
 
@@ -69,7 +71,7 @@ object LoginApi extends Controller {
         userName = userName.substring(1, userName.length - 1)
         password = password.substring(1, password.length - 1)
 
-        val userInfo = new UserInfo().get(Seq(("user_email", userName), ("password", password))).headOption.asInstanceOf[Option[UserInfo]]
+        val userInfo = new UserInfo().get(Seq(("user_email", userName), ("password", encoder.encrypt(password)))).headOption.asInstanceOf[Option[UserInfo]]
 
         if (userInfo.isEmpty) {
           Ok(LoginFailMessage)
@@ -126,7 +128,7 @@ object LoginApi extends Controller {
 
             userId = newUser.userId
             userEmail = email
-            password = passwd
+            password = encoder.encrypt(passwd)
           }
 
           try {
