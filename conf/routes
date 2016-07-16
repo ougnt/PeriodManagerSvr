@@ -16,5 +16,8 @@ GET     /adsClick                   controllers.Application.adsClick(experimentR
 
 # Login & Security
 GET     /handshake                  controllers.LoginApi.handShake
+POST    /forget/password            controllers.LoginApi.forgetPassword(id: String)
 POST    /login                      controllers.LoginApi.login(id: String)
 POST    /register                   controllers.LoginApi.register(id: String)
+
+GET     /test                       controllers.LoginApi.test

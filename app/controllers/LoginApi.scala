@@ -1,27 +1,46 @@
 package controllers
 
+import java.io.FileNotFoundException
 import java.sql.SQLException
 
 import com.fasterxml.jackson.core.JsonParseException
 import context.CoreContext
-import data.{RsaEncoder, RsaDecoder, RsaHelper}
-import play.api.libs.json.{JsValue, JsObject, Json}
+import data.{RsaDecoder, RsaEncoder, RsaHelper}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc._
-import repository.{User, UserInfo, RsaRepository}
+import repository.{RsaRepository, User, UserInfo}
+import utils.EmailHelper
+
+import scala.io.Source
+
 
 /**
   * * # Created by wacharint on 7/1/16.
   **/
 object LoginApi extends Controller {
 
+  //<editor-fold desc="Constants & Global variables">
+
   val LoginFailMessage = "Login Failed"
   val RegisterFailMessage = "Register Failed"
   val EmailExistingMessage = "Email Existing"
   val BadRequestMessage = "Bad Request"
   val OkMessage = "Ok"
+  val ServerErrorMessage = "Server Error"
+  val UserDoesNotExistMessage = "User is not exist"
+  val KeyD = "ad8cemekse6eh1hrkp8j39kvb"
+  val KeyN = "aq7k03xk4ouvzsrktw2lasctp"
+
+  val ForgotPasswordHtmlTemplateFile = "./conf/forgotPassword.html"
+
   var OverrideContext: Option[CoreContext] = None
+  var OverrideEmailHelper: Option[EmailHelper] = None
 
   val encoder = new RsaEncoder(BigInt("nz", 36), BigInt("aq7k03xk4ouvzsrktw2lasctp", 36))
+
+  //</editor-fold>
+
+  //<editor-fold desc="actions">
 
   def handShake = Action {
 
@@ -113,7 +132,7 @@ object LoginApi extends Controller {
         email = email.substring(1, email.length -1)
         passwd = passwd.substring(1, passwd.length -1)
 
-        if(new UserInfo().get(Seq("user_email" -> email)).size > 0) {
+        if(new UserInfo().get(Seq("user_email" -> email)).nonEmpty) {
 
           Ok(EmailExistingMessage)
         } else if(email.length < 3 || passwd.length < 3) {
@@ -131,13 +150,14 @@ object LoginApi extends Controller {
             password = encoder.encrypt(passwd)
           }
 
+          var msg = ""
           try {
 
             newUser.insert()
             newUserInfo.insert()
           } catch {
             case e: SQLException => {
-              val msg = e.getMessage()
+              msg = e.getMessage()
               registerIsFail = true
             }
           }
@@ -145,6 +165,7 @@ object LoginApi extends Controller {
           if(registerIsFail) {
 
             Ok(RegisterFailMessage)
+//            Ok(msg)
           } else {
 
             Ok(newUserInfo.userToken.toString)
@@ -153,6 +174,105 @@ object LoginApi extends Controller {
       }
     }
   } }
+
+  def forgetPassword(id: String) = Action{ request: Request[AnyContent] => {
+
+    implicit val context = if(OverrideContext.isEmpty) new CoreContext else OverrideContext.get
+    val decryptedMsg = decryptMsg(id, request)
+    var forgetPasswordIsFail = false
+
+    if(decryptedMsg equals BadRequestMessage) {
+
+      Ok(BadRequestMessage)
+    } else {
+
+      var jsonRequest: JsValue = null
+
+      try {
+
+        jsonRequest = Json.parse(decryptedMsg)
+      } catch {
+        case e: JsonParseException => forgetPasswordIsFail = true
+      }
+
+      if(forgetPasswordIsFail) {
+        Ok(BadRequestMessage)
+      } else {
+
+        var email = jsonRequest.asInstanceOf[JsObject].value.find(
+          j => j._1 equals "email").getOrElse(("email", ""))._2.toString
+
+        if(email isEmpty) {
+
+          Ok (BadRequestMessage)
+        } else {
+
+          val emailHelper = if (OverrideEmailHelper.isEmpty) {
+            new EmailHelper
+          } else {
+            OverrideEmailHelper.get
+          }
+
+          var canReadMailTemplate = true
+          var unknownException = false
+          var mailTemplate = ""
+          var exceptionMsg = ""
+
+          try {
+            mailTemplate = Source.fromFile(ForgotPasswordHtmlTemplateFile).mkString
+          } catch {
+            case e: FileNotFoundException => {
+              canReadMailTemplate = false
+              exceptionMsg = e.getMessage
+            }
+            case e: Exception => {
+              unknownException = true
+              exceptionMsg = e.getMessage
+            }
+          }
+
+          if(!canReadMailTemplate) {
+
+            // Send another mail warn myself
+            Ok(ServerErrorMessage)
+          } else {
+
+            email = email.substring(1, email.size - 1)
+            val userInfo = new UserInfo().get(Seq("user_email" -> email)).asInstanceOf[Seq[UserInfo]]
+
+            if(userInfo.isEmpty){
+              Ok(UserDoesNotExistMessage)
+            } else {
+
+              val encrytedPasswd = userInfo.head.password
+              val decryptedPasswd = new RsaDecoder(BigInt(KeyD, 36), BigInt(KeyN, 36)).decrypt(encrytedPasswd)
+
+              mailTemplate = mailTemplate.replace("{1}", decryptedPasswd)
+
+              emailHelper.sendEmail(email, EmailHelper.From, EmailHelper.Subject, mailTemplate)
+              Ok(OkMessage)
+            }
+          }
+        }
+      }
+    }
+  }}
+
+  def test = Action {
+
+    val emailHelper = new EmailHelper
+
+    val htmlFile = Source.fromFile("./conf/forgotPassword.html").mkString
+
+    emailHelper.sendEmail("wacharin.tangseree@gmail.com", EmailHelper.From, "Test subject", htmlFile)
+
+
+    Ok("Ok")
+  }
+
+  //</editor-fold>
+
+  //<editor-fold desc="Internal functions">
 
   def decryptMsg(id: String, request: Request[AnyContent])(implicit coreContext: CoreContext): String = {
 
@@ -186,4 +306,6 @@ object LoginApi extends Controller {
       }
     }
   }
+
+  //</editor-fold>
 }

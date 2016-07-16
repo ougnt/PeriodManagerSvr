@@ -1,6 +1,6 @@
 import java.util.UUID
 
-import controllers.{LoginApi, Application}
+import controllers.{Application, LoginApi}
 import data.RsaEncoder
 import org.joda.time.DateTime
 import org.junit.runner._
@@ -9,7 +9,8 @@ import org.specs2.mutable.BeforeAfter
 import org.specs2.runner._
 import play.api.test.Helpers._
 import play.api.test._
-import repository.{User, UserInfo, DailyUsage, Device}
+import repository._
+import utils.EmailHelper
 
 /**
  * Add your spec here.
@@ -357,6 +358,56 @@ class ApplicationSpec extends BasedSpec with BeforeAfter with Mockito {
       // verify
       val registerResult = contentAsString(registerRet)
       registerResult mustEqual LoginApi.EmailExistingMessage
+    }
+  }
+
+  """Application Forget password""" should {
+
+    """send the password to the specificed email when the email is existing""" in {
+
+      // setup
+      var calledTo = "a"
+      var calledFrom = "a"
+      var calledSubject = "a"
+      var calledMessage = "sa"
+      val mockEmailHelper = mock[EmailHelper]
+      mockEmailHelper.sendEmail(any[String], any[String], any[String], any[String]) answers { (params, mock) => {
+        params match {
+          case Array(to: String, from: String, subject: String, message: String) => {
+            calledTo = to
+            calledFrom = from
+            calledSubject = subject
+            calledMessage = message
+          }
+      }}}
+
+      LoginApi.OverrideEmailHelper = Some(mockEmailHelper)
+      LoginApi.OverrideContext = Some(context)
+
+      val user = new User()
+      user.insert()
+      val userInfo = new UserInfo(){
+        userId = user.userId
+        userEmail = "abc@abc.com"
+        password = "pass"
+      }
+      userInfo.insert()
+
+      val xxx = new UserInfo().get(Seq("user_email" -> "abc@abc.com"))
+
+      val rsa = new RsaRepository().get(Seq("rsa_uuid" -> "6338cd4e-431d-11e6-beb8-9e71128cae77")).asInstanceOf[Seq[RsaRepository]].head
+      val encoder = new RsaEncoder(BigInt(rsa.e, 36), BigInt(rsa.n, 36))
+      val encodedMsg = encoder.encrypt("""{"email":"abc@abc.com"}""")
+
+      // execute
+      val res = LoginApi.forgetPassword("6338cd4e-431d-11e6-beb8-9e71128cae77")(FakeRequest(GET, "forget/password")
+        .withHeaders("Content-Type" -> "Application/Text").withTextBody(encodedMsg))
+
+      // Verify
+      calledTo mustEqual userInfo.userEmail
+      calledFrom mustEqual EmailHelper.From
+      calledSubject mustEqual EmailHelper.Subject
+      calledMessage.contains(userInfo.password) mustEqual true
     }
   }
 

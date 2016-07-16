@@ -757,7 +757,7 @@ SHOW ENGINE INNODB STATUS;
 UPDATE db_info
 SET db_version = 17,
   `rec_modified_by`= `rec_created_by`,
-  `rec_modified_when` = CURRENT_TIMESTAMP();
+  `rec_modified_when` = '2016-07-05T20:10:22.288+07:00';
 
 INSERT INTO rsa_data VALUES
 (
@@ -779,3 +779,5 @@ MODIFY password VARCHAR(450) NOT NULL;
 CREATE OR REPLACE VIEW user_info_vu as (SELECT * FROM user_info);
 
 SHOW ENGINE INNODB STATUS;
+
+
