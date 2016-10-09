@@ -11,6 +11,7 @@ import play.api.libs.json.JsValue
 abstract class JsonSerializer {
 
   def jsonToUsageStatistics(usageStatJson: JsValue)(implicit context: CoreContext): Option[UsageStatistics]
+  def jsonToErrorLog(error: JsValue)(implicit context: CoreContext): Option[ErrorLog]
 }
 
 class JsonSerializerImpl extends JsonSerializer {
@@ -64,5 +65,18 @@ class JsonSerializerImpl extends JsonSerializer {
     }
 
     Some(retStatistic)
+  }
+
+  override def jsonToErrorLog(error: JsValue)(implicit context: CoreContext): Option[ErrorLog] = {
+    val ret = new ErrorLog {
+      try {
+        errorMessage = error \ "errorMessage" toString() replace("\"", "")
+        stacktrace = error \ "stacktrace" toString() replace("\"", "")
+      } catch {
+        case e: Exception =>
+          Nil
+      }
+    }
+    Option(ret)
   }
 }

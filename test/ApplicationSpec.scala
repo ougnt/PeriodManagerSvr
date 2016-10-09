@@ -1,12 +1,13 @@
 import java.util.UUID
 
-import controllers.{Application, LoginApi}
+import controllers.{ErrorLog, Application, LoginApi}
 import data.RsaEncoder
 import org.joda.time.DateTime
 import org.junit.runner._
 import org.specs2.mock.Mockito
 import org.specs2.mutable.BeforeAfter
 import org.specs2.runner._
+import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
 import repository._
@@ -408,6 +409,24 @@ class ApplicationSpec extends BasedSpec with BeforeAfter with Mockito {
       calledFrom mustEqual EmailHelper.From
       calledSubject mustEqual EmailHelper.Subject
       calledMessage.contains(userInfo.password) mustEqual true
+    }
+  }
+
+  """sendErrorLog""" should {
+    """save the log""" in {
+      // Setting
+      ErrorLog.overrrideContext = Some(context)
+
+      // Execute
+      val ret = ErrorLog.logError(FakeRequest(POST, "/errorLog")
+        .withHeaders("Content-Type" -> "Application/Json")
+        .withJsonBody(Json.parse("""{"errorMessage":"testErrorMessage","stacktrace":"test stacktrace"}""")))
+
+      // Verify
+      val errorId = contentAsString(ret)
+      val repo = new ErrorLog().get(Seq("error_id" -> errorId)).asInstanceOf[Seq[ErrorLog]].head
+      repo.errorMessage mustEqual "testErrorMessage"
+      repo.stacktrace mustEqual "test stacktrace"
     }
   }
 

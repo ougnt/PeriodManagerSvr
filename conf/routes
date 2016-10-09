@@ -20,4 +20,7 @@ POST    /forget/password            controllers.LoginApi.forgetPassword(id: Stri
 POST    /login                      controllers.LoginApi.login(id: String)
 POST    /register                   controllers.LoginApi.register(id: String)
 
+# ErrorLog
+POST    /errorLog                   controllers.ErrorLog.logError
+
 GET     /test                       controllers.LoginApi.test
