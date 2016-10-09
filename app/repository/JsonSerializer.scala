@@ -72,6 +72,7 @@ class JsonSerializerImpl extends JsonSerializer {
       try {
         errorMessage = error \ "errorMessage" toString() replace("\"", "")
         stacktrace = error \ "stacktrace" toString() replace("\"", "")
+        applicationVersion = error \ "applicationVersion" toString() replace("\"","")
       } catch {
         case e: Exception =>
           Nil

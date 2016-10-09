@@ -420,13 +420,14 @@ class ApplicationSpec extends BasedSpec with BeforeAfter with Mockito {
       // Execute
       val ret = ErrorLog.logError(FakeRequest(POST, "/errorLog")
         .withHeaders("Content-Type" -> "Application/Json")
-        .withJsonBody(Json.parse("""{"errorMessage":"testErrorMessage","stacktrace":"test stacktrace"}""")))
+        .withJsonBody(Json.parse("""{"errorMessage":"testErrorMessage","stacktrace":"test stacktrace","applicationVersion":"1"}""")))
 
       // Verify
       val errorId = contentAsString(ret)
       val repo = new ErrorLog().get(Seq("error_id" -> errorId)).asInstanceOf[Seq[ErrorLog]].head
       repo.errorMessage mustEqual "testErrorMessage"
       repo.stacktrace mustEqual "test stacktrace"
+      repo.applicationVersion mustEqual "1"
     }
   }
 
