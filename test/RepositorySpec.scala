@@ -783,6 +783,55 @@ class RepositorySpec extends BasedSpec {
     }
   }
 
+  """ErrorLog""" should {
+    """be able to be log""" in {
+      // Setup
+      val log = new ErrorLog {
+        errorMessage = "Test message : 12345566"
+        applicationVersion = "1000"
+        stacktrace =
+          """FATAL EXCEPTION: main
+                       |  java.lang.IllegalAccessError: tried to access method java.util.concurrent.ScheduledThreadPoolExecutor.setRemoveOnCancelPolicy:()V from class com.firebase.client.utilities.DefaultRunLoop
+                       |      at com.firebase.client.utilities.DefaultRunLoop.<init>(DefaultRunLoop.java:45)
+                       |      at com.firebase.client.android.AndroidPlatform$1.<init>(AndroidPlatform.java:44)
+                       |      at com.firebase.client.android.AndroidPlatform.newRunLoop(AndroidPlatform.java:44)
+                       |      at com.firebase.client.core.Context.ensureRunLoop(Context.java:224)
+                       |      at com.firebase.client.core.Context.initServices(Context.java:111)
+                       |      at com.firebase.client.core.Context.freeze(Context.java:92)
+                       |      at com.firebase.client.core.RepoManager.getLocalRepo(RepoManager.java:55)
+                       |      at com.firebase.client.core.RepoManager.getRepo(RepoManager.java:19)
+                       |      at com.firebase.client.Firebase.<init>(Firebase.java:172)
+                       |      at com.firebase.client.Firebase.<init>(Firebase.java:177)
+                       |      at com.firebase.client.Firebase.<init>(Firebase.java:155)
+                       |      at elnagga.forebasedemo.MainActivity.onCreate(MainActivity.java:24)
+                       |      at android.app.Activity.performCreate(Activity.java:5008)
+                       |      at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1079)
+                       |      at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:2023)
+                       |      at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:2084)
+                       |      at android.app.ActivityThread.access$600(ActivityThread.java:130)
+                       |      at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1195)
+                       |      at android.os.Handler.dispatchMessage(Handler.java:99)
+                       |      at android.os.Looper.loop(Looper.java:137)
+                       |      at android.app.ActivityThread.main(ActivityThread.java:4745)
+                       |      at java.lang.reflect.Method.invokeNative(Native Method)
+                       |      at java.lang.reflect.Method.invoke(Method.java:511)
+                       |      at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:786)
+                       |      at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:553)
+                       |      at dalvik.system.NativeStart.main(Native Method)"""
+      }
+
+      // Execute
+      val id = log.insert()
+
+      // Verify
+      val logFromDB = new ErrorLog().get(Seq("error_id" -> id.toString)).asInstanceOf[Seq[ErrorLog]].head
+      logFromDB.applicationVersion mustEqual log.applicationVersion
+      logFromDB.errorMessage mustEqual log.errorMessage
+      logFromDB.stacktrace mustEqual log.stacktrace
+
+    }
+  }
+
   def beSameDevice(expect: Device): Matcher[Device] = (actual: Device) => (
     expect.deviceId == actual.deviceId &&
     expect.language.equals(actual.language),

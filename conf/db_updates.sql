@@ -780,4 +780,35 @@ CREATE OR REPLACE VIEW user_info_vu as (SELECT * FROM user_info);
 
 SHOW ENGINE INNODB STATUS;
 
+--- -------------------------------------------
+ -- version18.0
+ -- -------------------------------------------
+
+ UPDATE db_info
+ SET db_version = 18,
+   `rec_modified_by`= `rec_created_by`,
+   `rec_modified_when` = '2016-10-09T20:10:22.288+07:00';
+
+ CREATE TABLE IF NOT EXISTS error_log (
+ 	error_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+ 	application_version VARCHAR(10) NOT NULL,
+ 	error_message VARCHAR(256) NOT NULL,
+ 	stacktrace VARCHAR(20000) NOT NULL,
+ 	rec_created_by VARCHAR(36) NOT NULL,
+ 	rec_created_when VARCHAR(128) NOT NULL,
+ 	rec_modified_by VARCHAR(36),
+ 	rec_modified_when VARCHAR(128),
+ 	rec_status INT NOT NULL DEFAULT 0,
+ 	FOREIGN KEY (rec_status) REFERENCES rec_status_ref (rec_status_id),
+ 	FOREIGN KEY (rec_created_by) REFERENCES users(user_id),
+ 	FOREIGN KEY (rec_modified_by) REFERENCES users(user_id)
+ );
+
+ CREATE OR REPLACE VIEW error_log_vu AS (SELECT * FROM error_log);
+
+ SHOW ENGINE INNODB STATUS;
+
+
+
+
 
